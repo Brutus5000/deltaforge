@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/deltaforge
+    username: postgres
+    password: banana
+  jpa:
+    generate-ddl: true
