@@ -1,4 +1,4 @@
-package net.brutus5000.deltaforge.api;
+package net.brutus5000.deltaforge.error;
 
 import lombok.Getter;
 import lombok.ToString;

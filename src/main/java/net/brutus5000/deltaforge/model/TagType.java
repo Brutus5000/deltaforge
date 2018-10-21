@@ -7,7 +7,7 @@ public enum TagType {
      * <p>
      * Implication: In theory source tags don't need to be kept in original binary state after creating the patches
      * to their destinated baseline. It is however strongly recommended to do this anyway if possible (i.e. in case
-     * of corrupted repositories or other cases of desaster recovery).
+     * of corrupted repository or other cases of desaster recovery).
      */
     SOURCE,
     /**

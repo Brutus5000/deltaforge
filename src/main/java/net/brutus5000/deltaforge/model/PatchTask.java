@@ -1,6 +1,9 @@
 package net.brutus5000.deltaforge.model;
 
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.time.OffsetDateTime;
@@ -13,19 +16,23 @@ import java.util.UUID;
  */
 @Entity
 @Data
+@FieldNameConstants
 public class PatchTask implements UniqueEntity {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+    @CreationTimestamp
     private OffsetDateTime createdAt;
+    @UpdateTimestamp
     private OffsetDateTime updatedAt;
     @ManyToOne
-    @JoinColumn
+    @JoinColumn(nullable = false)
     private Tag from;
     @ManyToOne
-    @JoinColumn
+    @JoinColumn(nullable = false)
     private Tag to;
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private TaskStatus status;
     private String errorMessage;
 }
