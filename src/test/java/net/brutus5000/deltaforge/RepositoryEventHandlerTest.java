@@ -4,7 +4,7 @@ import net.brutus5000.deltaforge.error.ApiException;
 import net.brutus5000.deltaforge.error.ErrorCode;
 import net.brutus5000.deltaforge.model.Repository;
 import net.brutus5000.deltaforge.repository.RepositoryRepository;
-import net.brutus5000.deltaforge.validator.DeltaforgeRepositoryEventHandler;
+import net.brutus5000.deltaforge.validator.RepositoryEventHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class DeltaforgeRepositoryEventHandlerTest {
+class RepositoryEventHandlerTest {
     static final String REPOSITORY_NAME = "testRepository";
     static final String REPOSITORY_GIT_URL = "http://localhost";
 
@@ -34,7 +34,7 @@ class DeltaforgeRepositoryEventHandlerTest {
     private EntityManager entityManager;
 
     @InjectMocks
-    private DeltaforgeRepositoryEventHandler deltaforgeRepositoryEventHandler;
+    private RepositoryEventHandler repositoryEventHandler;
 
     @BeforeEach
     void beforeEach() {
@@ -49,7 +49,7 @@ class DeltaforgeRepositoryEventHandlerTest {
                 when(repositoryRepository.findByName(null)).thenReturn(Optional.empty());
                 Repository repository = new Repository();
 
-                ApiException exception = assertThrows(ApiException.class, () -> deltaforgeRepositoryEventHandler.handleBeforeCreate(repository));
+                ApiException exception = assertThrows(ApiException.class, () -> repositoryEventHandler.handleBeforeCreate(repository));
 
                 assertThat(exception, apiExceptionWithCode(ErrorCode.PROPERTY_IS_NULL));
             }
@@ -60,7 +60,7 @@ class DeltaforgeRepositoryEventHandlerTest {
                 Repository repository = new Repository()
                         .setName("");
 
-                ApiException exception = assertThrows(ApiException.class, () -> deltaforgeRepositoryEventHandler.handleBeforeCreate(repository));
+                ApiException exception = assertThrows(ApiException.class, () -> repositoryEventHandler.handleBeforeCreate(repository));
 
                 assertThat(exception, apiExceptionWithCode(ErrorCode.STRING_IS_EMPTY));
             }
@@ -71,7 +71,7 @@ class DeltaforgeRepositoryEventHandlerTest {
                 Repository repository = new Repository()
                         .setName(REPOSITORY_NAME);
 
-                deltaforgeRepositoryEventHandler.handleBeforeCreate(repository);
+                repositoryEventHandler.handleBeforeCreate(repository);
             }
         }
     }
@@ -89,7 +89,7 @@ class DeltaforgeRepositoryEventHandlerTest {
                 when(repositoryRepository.findByName(REPOSITORY_NAME)).thenReturn(Optional.of(mock(Repository.class)));
                 when(repositoryRepository.findByGitUrl(REPOSITORY_GIT_URL)).thenReturn(Optional.empty());
 
-                ApiException exception = assertThrows(ApiException.class, () -> deltaforgeRepositoryEventHandler.handleBeforeCreate(repository));
+                ApiException exception = assertThrows(ApiException.class, () -> repositoryEventHandler.handleBeforeCreate(repository));
 
                 assertThat(exception, apiExceptionWithCode(ErrorCode.REPOSITORY_NAME_IN_USE));
             }
@@ -99,7 +99,7 @@ class DeltaforgeRepositoryEventHandlerTest {
                 when(repositoryRepository.findByName(REPOSITORY_NAME)).thenReturn(Optional.empty());
                 when(repositoryRepository.findByGitUrl(REPOSITORY_GIT_URL)).thenReturn(Optional.of(mock(Repository.class)));
 
-                ApiException exception = assertThrows(ApiException.class, () -> deltaforgeRepositoryEventHandler.handleBeforeCreate(repository));
+                ApiException exception = assertThrows(ApiException.class, () -> repositoryEventHandler.handleBeforeCreate(repository));
 
                 assertThat(exception, apiExceptionWithCode(ErrorCode.REPOSITORY_GIT_URL_IN_USE));
             }
@@ -125,7 +125,7 @@ class DeltaforgeRepositoryEventHandlerTest {
                 when(repositoryRepository.findById(any())).thenReturn(Optional.of(preUpdate));
                 when(repositoryRepository.findByName(NEW_NAME)).thenReturn(Optional.of(mock(Repository.class)));
 
-                ApiException exception = assertThrows(ApiException.class, () -> deltaforgeRepositoryEventHandler.handleBeforeSave(repository));
+                ApiException exception = assertThrows(ApiException.class, () -> repositoryEventHandler.handleBeforeSave(repository));
 
                 assertThat(exception, apiExceptionWithCode(ErrorCode.REPOSITORY_NAME_IN_USE));
             }
@@ -137,7 +137,7 @@ class DeltaforgeRepositoryEventHandlerTest {
                 when(repositoryRepository.findById(any())).thenReturn(Optional.of(preUpdate));
                 when(repositoryRepository.findByGitUrl(NEW_GIT_URL)).thenReturn(Optional.of(mock(Repository.class)));
 
-                ApiException exception = assertThrows(ApiException.class, () -> deltaforgeRepositoryEventHandler.handleBeforeSave(repository));
+                ApiException exception = assertThrows(ApiException.class, () -> repositoryEventHandler.handleBeforeSave(repository));
 
                 assertThat(exception, apiExceptionWithCode(ErrorCode.REPOSITORY_GIT_URL_IN_USE));
             }
@@ -152,7 +152,7 @@ class DeltaforgeRepositoryEventHandlerTest {
                 when(repositoryRepository.findByName(NEW_NAME)).thenReturn(Optional.empty());
                 when(repositoryRepository.findByGitUrl(NEW_GIT_URL)).thenReturn(Optional.empty());
 
-                deltaforgeRepositoryEventHandler.handleBeforeSave(repository);
+                repositoryEventHandler.handleBeforeSave(repository);
             }
         }
     }

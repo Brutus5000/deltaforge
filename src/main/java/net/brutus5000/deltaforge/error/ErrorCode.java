@@ -16,6 +16,7 @@ public enum ErrorCode {
     BRANCH_BASELINE_FIXED(100, "Branch baseline fixed", "You cannot change the initial baseline after creation."),
     TAG_NOT_FOUND(102, "Tag not found", "There is no tag with id  ''{0}''."),
     TAG_NAME_IN_USE(100, "Tag name in use", "The tag name ''{1}'' is already in use in repository ''{0}''."),
+    TAG_FOLDER_NOT_EXISTS(100, "Tag folder missing", "Tag folder ''{}'' does not exists."),
     PATCH_NOT_FOUND(103, "Patch not found", "There is no patch with id  ''{0}''."),
     UNKNOWN_FILE_SOURCE(104, "Creating tag failed", "Unknown fileSource  ''{0}''.");
 

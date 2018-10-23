@@ -2,6 +2,7 @@ package net.brutus5000.deltaforge.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @Entity
 @Data
 @FieldNameConstants
+@ToString(exclude = {"repository"})
 public class Tag implements UniqueEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

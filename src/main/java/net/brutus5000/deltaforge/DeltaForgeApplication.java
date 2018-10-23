@@ -1,16 +1,19 @@
 package net.brutus5000.deltaforge;
 
+import net.brutus5000.deltaforge.config.DeltaForgeProperties;
 import net.brutus5000.deltaforge.model.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
 import java.util.List;
 import java.util.UUID;
 
 @SpringBootApplication
+@EnableConfigurationProperties({DeltaForgeProperties.class})
 public class DeltaForgeApplication {
 
     public static void main(String[] args) {

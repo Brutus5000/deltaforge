@@ -47,6 +47,10 @@ public class ValidationBuilder {
         return this;
     }
 
+    public <T> ValidationBuilder assertThat(Predicate<T> predicate, T value, ErrorCode errorCode, Object... args) {
+        return conditionalAssert(() -> true, predicate, value, errorCode, args);
+    }
+
     public ValidationBuilder assertNotBlank(String value, String fieldName) {
         conditionalAssertNotBlank(() -> true, value, fieldName);
         return this;
