@@ -1,5 +1,6 @@
 package net.brutus5000.deltaforge;
 
+import net.brutus5000.deltaforge.api.FileService;
 import net.brutus5000.deltaforge.error.ApiException;
 import net.brutus5000.deltaforge.error.ErrorCode;
 import net.brutus5000.deltaforge.model.Repository;
@@ -35,29 +36,38 @@ class TagEventHandlerTest {
     private TagRepository tagRepository;
     @Mock
     private EntityManager entityManager;
+    @Mock
+    private FileService fileService;
 
     @InjectMocks
     private TagEventHandler tagEventHandler;
 
     @BeforeEach
-    void beforeEach() {
+    void beforeEach() throws Exception {
     }
 
     @Nested
     class GivenNoExistingTags {
         @Nested
         class WhenCreating {
+            @BeforeEach
+            void beforeEach() throws Exception {
+                when(fileService.existsTagFolderPath(any())).thenReturn(true);
+            }
+
             @Test
             void thenHandleBeforeCreateShouldFailOnEmptyTag() {
                 Tag tag = new Tag();
                 when(tagRepository.findByRepositoryAndName(null, null)).thenReturn(Optional.empty());
+                when(fileService.existsTagFolderPath(any())).thenReturn(false);
 
                 ApiException exception = assertThrows(ApiException.class, () -> tagEventHandler.handleBeforeCreate(tag));
 
                 assertThat(exception, apiExceptionWithCode(
                         ErrorCode.PROPERTY_IS_NULL,
                         ErrorCode.PROPERTY_IS_NULL,
-                        ErrorCode.PROPERTY_IS_NULL
+                        ErrorCode.PROPERTY_IS_NULL,
+                        ErrorCode.TAG_FOLDER_NOT_EXISTS
                 ));
             }
 
@@ -67,6 +77,7 @@ class TagEventHandlerTest {
                 Tag tag = new Tag()
                         .setRepository(repository)
                         .setType(TagType.SOURCE)
+
                         .setName("");
 
                 ApiException exception = assertThrows(ApiException.class, () -> tagEventHandler.handleBeforeCreate(tag));
@@ -91,10 +102,17 @@ class TagEventHandlerTest {
     class GivenExistingRepositories {
         @Nested
         class WhenCreating {
-            Tag tag = new Tag()
-                    .setRepository(repository)
-                    .setName(TAG_NAME)
-                    .setType(TagType.SOURCE);
+            private Tag tag;
+
+            @BeforeEach
+            void beforeEach() throws Exception {
+                when(fileService.existsTagFolderPath(any())).thenReturn(true);
+
+                tag = new Tag()
+                        .setRepository(repository)
+                        .setName(TAG_NAME)
+                        .setType(TagType.SOURCE);
+            }
 
             @Test
             void thenHandleBeforeCreateShouldFailOnNameAlreadyInUse() {
