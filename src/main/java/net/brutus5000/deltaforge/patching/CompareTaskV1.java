@@ -30,7 +30,7 @@ public class CompareTaskV1 {
     }
 
     public PatchMetadata compare() throws IOException {
-        Path of = Paths.get("");
+        Path of = Paths.get(".");
         PatchDirectoryItem root = compareDirectory(of);
 
         return new PatchMetadata()

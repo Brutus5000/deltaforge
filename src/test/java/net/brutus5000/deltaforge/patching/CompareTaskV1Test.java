@@ -6,7 +6,6 @@ import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.util.ResourceUtils;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -34,13 +33,13 @@ public class CompareTaskV1Test {
 
     @BeforeEach
     void beforeEach() throws Exception {
-        String FILE_PREFIX = "src/test/resources/";
+        String FILE_PREFIX = "./src/test/resources/";
         String PATCH_NAME = "source_to_target";
-        Path patchFolder = ResourceUtils.getFile(FILE_PREFIX + "testRepo/temp/patching/" + PATCH_NAME).toPath();
+        Path patchFolder = Paths.get(FILE_PREFIX + "testRepo/temp/patching/" + PATCH_NAME);
         instance = new CompareTaskV1(
-                ResourceUtils.getFile(FILE_PREFIX + "testRepo/tags/source").toPath(),
-                ResourceUtils.getFile(FILE_PREFIX + "testRepo/tags/initialBaseline").toPath(),
-                ResourceUtils.getFile(FILE_PREFIX + "testRepo/tags/target").toPath(),
+                Paths.get(FILE_PREFIX + "testRepo/tags/source"),
+                Paths.get(FILE_PREFIX + "testRepo/tags/initialBaseline"),
+                Paths.get(FILE_PREFIX + "testRepo/tags/target"),
                 patchFolder
         );
 
@@ -49,6 +48,8 @@ public class CompareTaskV1Test {
                     .sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
                     .forEach(File::delete);
+        } else {
+            Files.createDirectory(patchFolder);
         }
     }
 
@@ -98,7 +99,7 @@ public class CompareTaskV1Test {
                     () -> assertEquals(FILENAME_MODIFIED_FROM_SOURCE, fileItem.getName()),
                     () -> assertEquals(PatchAction.BSDIFF, fileItem.getAction()),
                     () -> assertEquals("0x5c428a3d", fileItem.getBaseCrc()),
-                    () -> assertEquals("0xfeb06a79", fileItem.getTargetCrc())
+                    () -> assertEquals("0x2b7fbb9d", fileItem.getTargetCrc())
             );
         }
 
@@ -110,7 +111,7 @@ public class CompareTaskV1Test {
                     () -> assertEquals(FILENAME_MODIFIED_FROM_INITIAL, fileItem.getName()),
                     () -> assertEquals(PatchAction.BSDIFF_FROM_INITIAL_BASELINE, fileItem.getAction()),
                     () -> assertEquals("0xffc5f2e9", fileItem.getBaseCrc()),
-                    () -> assertEquals("0x110cdad1", fileItem.getTargetCrc())
+                    () -> assertEquals("0x6fe9f2d6", fileItem.getTargetCrc())
             );
         }
     }
@@ -119,7 +120,7 @@ public class CompareTaskV1Test {
     class DirectoryComparison {
         @Test
         void compareDirectories() throws Exception {
-            PatchDirectoryItem directoryItem = instance.compareDirectory(Paths.get(""));
+            PatchDirectoryItem directoryItem = instance.compareDirectory(Paths.get("."));
 
             assertThat(directoryItem.getItems(), containsInAnyOrder(
                     patchItemWith(PatchFileItem.class, FILENAME_UNCHANGED, PatchAction.UNCHANGED),

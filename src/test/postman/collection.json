@@ -1,0 +1,510 @@
+{
+  "info": {
+    "_postman_id": "84f5c1f3-29e2-467a-a2a5-c7ea3c862c0f",
+    "name": "DeltaForge",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Repository",
+      "item": [
+        {
+          "name": "Create repository",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "544e5ebe-201d-478d-9285-8da05a3ecb8f",
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "946e2965-f252-485a-b3dc-3ec4919c24fe",
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody);",
+                  "var uidRegex = new RegExp(\"/repositories\\/([0-9a-f\\-]{36})\",\"g\");",
+                  "var uid = uidRegex.exec(jsonData.links[0].href)[1];",
+                  "postman.setEnvironmentVariable(\"repositoryId\", uid);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "type": "text",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"name\": \"myRepo\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/repositories",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "repositories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List of repositories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/repositories",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "repositories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get repository",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "type": "text",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/repositories/{{repositoryId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "repositories",
+                "{{repositoryId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Tag",
+      "item": [
+        {
+          "name": "Create tag [baseline]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "9c7209cd-b714-4be5-bda6-b995eee76e07",
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody);",
+                  "var uidRegex = new RegExp(\"/tags\\/([0-9a-f\\-]{36})\",\"g\");",
+                  "var uid = uidRegex.exec(jsonData.links[0].href)[1];",
+                  "postman.setEnvironmentVariable(\"tagId\", uid);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"name\": \"baseline\",\n\t\"repository\": \"http://localhost:8080/api/v1/repositories/{{repositoryId}}\",\n\t\"type\": \"BASELINE\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tags",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tags"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create tag [source]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "9c7209cd-b714-4be5-bda6-b995eee76e07",
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody);",
+                  "var uidRegex = new RegExp(\"/tags\\/([0-9a-f\\-]{36})\",\"g\");",
+                  "var uid = uidRegex.exec(jsonData.links[0].href)[1];",
+                  "postman.setEnvironmentVariable(\"sourceTagId\", uid);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "type": "text",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"name\": \"source\",\n\t\"repository\": \"http://localhost:8080/api/v1/repositories/{{repositoryId}}\",\n\t\"type\": \"SOURCE\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tags",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tags"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create tag [next]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "9c7209cd-b714-4be5-bda6-b995eee76e07",
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody);",
+                  "var uidRegex = new RegExp(\"/tags\\/([0-9a-f\\-]{36})\",\"g\");",
+                  "var uid = uidRegex.exec(jsonData.links[0].href)[1];",
+                  "postman.setEnvironmentVariable(\"nextTagId\", uid);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "type": "text",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"name\": \"next\",\n\t\"repository\": \"http://localhost:8080/api/v1/repositories/{{repositoryId}}\",\n\t\"type\": \"INTERMEDIATE\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tags",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tags"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List of tags",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"name\": \"v1\",\n\t\"repository\": \"http://localhost:8080/api/v1/repositories/845ac7b0-0284-4d61-8725-b8b088ea312c\",\n\t\"type\": \"SOURCE\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/tags",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "tags"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create patch",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": ""
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Branch",
+      "item": [
+        {
+          "name": "Create branch",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "f7da7488-523f-412a-8908-7cab9833cab7",
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody);",
+                  "var uidRegex = new RegExp(\"/branches\\/([0-9a-f\\-]{36})\",\"g\");",
+                  "var uid = uidRegex.exec(jsonData.links[0].href)[1];",
+                  "postman.setEnvironmentVariable(\"branchId\", uid);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"name\": \"develop\",\n\t\"repository\": \"http://localhost:8080/api/v1/repositories/{{repositoryId}}\",\n\t\"initialBaseline\": \"http://localhost:8080/api/v1/tags/{{tagId}}\",\n\t\"currentBaseline\": \"http://localhost:8080/api/v1/tags/{{tagId}}\",\n\t\"currentTag\": \"http://localhost:8080/api/v1/tags/{{tagId}}\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/branches",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "branches"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List of branches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/branches",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "branches"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create patch [source]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "7dc27f84-9c5b-4890-9290-952258cd30f4",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(202);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tagId",
+                  "value": "{{sourceTagId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "tagType",
+                  "value": "SOURCE",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/branches/{{branchId}}/addTag",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "branches",
+                "{{branchId}}",
+                "addTag"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create patch [next]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "16b79ca2-4f7e-4b87-94ef-ae03dbdc7819",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(202);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tagId",
+                  "value": "{{nextTagId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "tagType",
+                  "value": "INTERMEDIATE",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/branches/{{branchId}}/addTag",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "branches",
+                "{{branchId}}",
+                "addTag"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

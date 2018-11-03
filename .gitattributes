@@ -1,0 +1,12 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+*.txt                   binary
+*.dll                   binary
+*.ttf                   binary
+*.png                   binary
+*.jpg                   binary
+*.mp3                   binary
+*.zip                   binary
+*.exe                   binary
+*.jar                   binary
