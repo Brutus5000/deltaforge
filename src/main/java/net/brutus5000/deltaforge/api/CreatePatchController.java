@@ -1,34 +1,36 @@
-//package net.brutus5000.deltaforge.api;
-//
-//import net.brutus5000.deltaforge.RepositoryService;
-//import net.brutus5000.deltaforge.model.Branch;
-//import net.brutus5000.deltaforge.model.Repository;
-//import net.brutus5000.deltaforge.model.Tag;
-//import org.springframework.http.MediaType;
-//import org.springframework.web.bind.annotation.RequestMapping;
-//import org.springframework.web.bind.annotation.RequestMethod;
-//import org.springframework.web.bind.annotation.RequestParam;
-//import org.springframework.web.bind.annotation.RestController;
-//
-//import javax.servlet.http.HttpServletRequest;
-//import javax.servlet.http.HttpServletResponse;
-//import java.util.List;
-//import java.util.UUID;
-//
-//@RestController
-//@RequestMapping("api/v1.0/repositories123")
-//public class RepositoriesController {
-//    private final RepositoryService repositoryService;
-//
-//    public RepositoriesController(RepositoryService repositoryService) {
-//        this.repositoryService = repositoryService;
-//    }
-//
-//    @RequestMapping(path = "", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-//    public List<Repository> getRepositories(HttpServletRequest request, HttpServletResponse response) {
-//        return repositoryService.getRepositories();
-//    }
-//
+package net.brutus5000.deltaforge.api;
+
+import lombok.extern.slf4j.Slf4j;
+import net.brutus5000.deltaforge.RepositoryService;
+import net.brutus5000.deltaforge.model.TagType;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.UUID;
+
+@RestController
+@Slf4j
+public class CreatePatchController {
+    private final RepoService repoService;
+    private final FileService fileService;
+    private final RepositoryService repositoryService;
+
+    public CreatePatchController(RepoService repoService, FileService fileService, RepositoryService repositoryService) {
+        this.repoService = repoService;
+        this.fileService = fileService;
+        this.repositoryService = repositoryService;
+    }
+
+    @RequestMapping(path = "api/v1/branches/{branchId}/addTag", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void addTag(HttpServletRequest request, HttpServletResponse response,
+                       @PathVariable("branchId") UUID branchId, @RequestParam("tagId") UUID tagId, @RequestParam("tagType") String tagTypeString) {
+        repoService.addTagToBranch(branchId, tagId, TagType.parse(tagTypeString));
+    }
+
 //    //@ApiOperation("Registers a new account that needs to be activated.")
 //    @RequestMapping(path = "", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 //    public Repository addRepository(HttpServletRequest request, HttpServletResponse response,
@@ -80,4 +82,4 @@
 //                throw new ApiException(new Error(ErrorCode.UNKNOWN_FILE_SOURCE, fileSource));
 //        }
 //    }
-//}
+}

@@ -7,7 +7,7 @@ import net.brutus5000.deltaforge.model.Repository;
 import net.brutus5000.deltaforge.model.Tag;
 import net.brutus5000.deltaforge.model.TagType;
 import net.brutus5000.deltaforge.repository.TagRepository;
-import net.brutus5000.deltaforge.validator.TagEventHandler;
+import net.brutus5000.deltaforge.resthandler.TagEventHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

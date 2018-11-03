@@ -4,7 +4,7 @@ import net.brutus5000.deltaforge.error.ApiException;
 import net.brutus5000.deltaforge.error.ErrorCode;
 import net.brutus5000.deltaforge.model.Repository;
 import net.brutus5000.deltaforge.repository.RepositoryRepository;
-import net.brutus5000.deltaforge.validator.RepositoryEventHandler;
+import net.brutus5000.deltaforge.resthandler.RepositoryEventHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

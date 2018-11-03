@@ -1,4 +1,4 @@
-package net.brutus5000.deltaforge.validator;
+package net.brutus5000.deltaforge.resthandler;
 
 import lombok.extern.slf4j.Slf4j;
 import net.brutus5000.deltaforge.error.Error;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
 
-import static net.brutus5000.deltaforge.validator.ValidationBuilder.*;
+import static net.brutus5000.deltaforge.resthandler.ValidationBuilder.*;
 
 
 @Component

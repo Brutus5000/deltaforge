@@ -4,10 +4,14 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Data
 @ConfigurationProperties(prefix = "deltaforge", ignoreUnknownFields = false)
 public class DeltaForgeProperties {
     @NotBlank
     private String rootRepositoryPath;
+
+    @NotNull
+    private Long baselineFilesizeThreshold;
 }

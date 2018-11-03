@@ -1,12 +1,15 @@
-package net.brutus5000.deltaforge.validator;
+package net.brutus5000.deltaforge.resthandler;
 
 import lombok.extern.slf4j.Slf4j;
 import net.brutus5000.deltaforge.api.FileService;
 import net.brutus5000.deltaforge.error.Error;
 import net.brutus5000.deltaforge.error.ErrorCode;
 import net.brutus5000.deltaforge.error.NotFoundApiException;
+import net.brutus5000.deltaforge.events.TagCreatedEvent;
 import net.brutus5000.deltaforge.model.Tag;
 import net.brutus5000.deltaforge.repository.TagRepository;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.rest.core.annotation.HandleAfterCreate;
 import org.springframework.data.rest.core.annotation.HandleBeforeCreate;
 import org.springframework.data.rest.core.annotation.HandleBeforeSave;
 import org.springframework.data.rest.core.annotation.RepositoryEventHandler;
@@ -14,18 +17,20 @@ import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
 
-import static net.brutus5000.deltaforge.validator.ValidationBuilder.whenChanged;
+import static net.brutus5000.deltaforge.resthandler.ValidationBuilder.whenChanged;
 
 
 @Component
 @Slf4j
 @RepositoryEventHandler(Tag.class)
 public class TagEventHandler {
+    private final ApplicationEventPublisher applicationEventPublisher;
     private final FileService fileService;
     private final TagRepository tagRepository;
     private final EntityManager entityManager;
 
-    public TagEventHandler(FileService fileService, TagRepository TagRepository, EntityManager entityManager) {
+    public TagEventHandler(ApplicationEventPublisher applicationEventPublisher, FileService fileService, TagRepository TagRepository, EntityManager entityManager) {
+        this.applicationEventPublisher = applicationEventPublisher;
         this.fileService = fileService;
         this.tagRepository = TagRepository;
         this.entityManager = entityManager;
@@ -64,5 +69,10 @@ public class TagEventHandler {
                         tag, ErrorCode.TAG_NAME_IN_USE, tag.getRepositoryId(), tag.getName()
                 )
                 .validate();
+    }
+
+    @HandleAfterCreate
+    public void handleAfterCreate(Tag tag) {
+        applicationEventPublisher.publishEvent(new TagCreatedEvent(tag));
     }
 }

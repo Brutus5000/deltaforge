@@ -8,11 +8,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.List;
 import java.util.UUID;
 
 @SpringBootApplication
+@EnableScheduling
 @EnableConfigurationProperties({DeltaForgeProperties.class})
 public class DeltaForgeApplication {
 

@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public interface UniqueEntity {
+
     UUID getId();
 
     OffsetDateTime getCreatedAt();

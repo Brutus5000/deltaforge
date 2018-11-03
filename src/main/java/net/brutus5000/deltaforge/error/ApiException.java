@@ -20,7 +20,7 @@ public class ApiException extends RuntimeException {
         this.errors = errors;
     }
 
-    public static ApiException of(ErrorCode errorCode, String... args) {
+    public static ApiException of(ErrorCode errorCode, Object... args) {
         return new ApiException(new Error(errorCode, args));
     }
 

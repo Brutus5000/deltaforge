@@ -1,4 +1,4 @@
-package net.brutus5000.deltaforge.validator;
+package net.brutus5000.deltaforge.resthandler;
 
 import lombok.extern.slf4j.Slf4j;
 import net.brutus5000.deltaforge.error.ApiException;
@@ -64,6 +64,27 @@ public class ValidationBuilder {
 
     public ValidationBuilder assertNotNull(Object value, String fieldName) {
         conditionalAssertNotNull(() -> true, value, fieldName);
+        return this;
+    }
+
+    public ValidationBuilder conditionalAssertExists(BooleanSupplier conditionalExpression, Optional<?> optionalValue, ErrorCode errorCode, Object... args) {
+        conditionalAssert(conditionalExpression, Optional::isPresent, optionalValue, errorCode, args);
+        return this;
+    }
+
+    public ValidationBuilder assertExists(Optional<?> optionalValue, ErrorCode errorCode, Object... args) {
+        conditionalAssertExists(() -> true, optionalValue, errorCode, args);
+        return this;
+    }
+
+    public <T> ValidationBuilder conditionalAssertExists(BooleanSupplier conditionalExpression, Function<T, Optional<?>> query, T criteria, ErrorCode errorCode, Object... args) {
+        Predicate<T> exists = t -> query.apply(t).isPresent();
+        conditionalAssert(conditionalExpression, exists, criteria, errorCode, args);
+        return this;
+    }
+
+    public <T> ValidationBuilder assertExists(Function<T, Optional<?>> query, T criteria, ErrorCode errorCode, Object... args) {
+        conditionalAssertExists(() -> true, query, criteria, errorCode, args);
         return this;
     }
 

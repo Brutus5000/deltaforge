@@ -14,7 +14,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.1.0.RC1</version>
+        <version>2.1.0.RELEASE</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -29,9 +29,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>10</java.version>
+        <java.version>11</java.version>
 
         <springfox.version>2.9.2</springfox.version>
+        <jgrapht.version>1.2.0</jgrapht.version>
         <guava.version>26.0-jre</guava.version>
         <mockito.version>2.23.0</mockito.version>
     </properties>
@@ -100,6 +101,22 @@
                     <artifactId>junit</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jgrapht</groupId>
+            <artifactId>jgrapht-core</artifactId>
+            <version>${jgrapht.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jgrapht</groupId>
+            <artifactId>jgrapht-io</artifactId>
+            <version>${jgrapht.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jgrapht</groupId>
+            <artifactId>jgrapht-guava</artifactId>
+            <version>${jgrapht.version}</version>
         </dependency>
 
         <dependency>

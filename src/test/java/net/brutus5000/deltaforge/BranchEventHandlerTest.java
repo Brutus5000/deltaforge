@@ -6,7 +6,7 @@ import net.brutus5000.deltaforge.model.Branch;
 import net.brutus5000.deltaforge.model.Repository;
 import net.brutus5000.deltaforge.model.Tag;
 import net.brutus5000.deltaforge.repository.BranchRepository;
-import net.brutus5000.deltaforge.validator.BranchEventHandler;
+import net.brutus5000.deltaforge.resthandler.BranchEventHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.persistence.EntityManager;
 import java.util.Optional;
+import java.util.UUID;
 
 import static net.brutus5000.deltaforge.error.ApiExceptionWithMultipleCodes.apiExceptionWithCode;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -122,9 +123,11 @@ class BranchEventHandlerTest {
         class WhenUpdating {
             String NEW_NAME = "new name";
 
-            Tag tag = new Tag();
+            Tag tag = new Tag()
+                    .setId(UUID.randomUUID());
 
             Branch preUpdate = new Branch()
+                    .setId(UUID.randomUUID())
                     .setName(BRANCH_NAME)
                     .setRepository(repository)
                     .setInitialBaseline(tag)
@@ -132,6 +135,7 @@ class BranchEventHandlerTest {
                     .setCurrentTag(tag);
 
             Branch branch = new Branch()
+                    .setId(preUpdate.getId())
                     .setName(BRANCH_NAME)
                     .setRepository(repository)
                     .setInitialBaseline(tag)
@@ -163,7 +167,9 @@ class BranchEventHandlerTest {
 
             @Test
             void thenHandleBeforeSaveShouldFailOnChangingInitialBaseline() {
-                branch.setInitialBaseline(new Tag().setName("someNewTag"));
+                branch.setInitialBaseline(new Tag()
+                        .setId(UUID.randomUUID())
+                        .setName("someNewTag"));
 
                 when(branchRepository.findById(any())).thenReturn(Optional.of(preUpdate));
 

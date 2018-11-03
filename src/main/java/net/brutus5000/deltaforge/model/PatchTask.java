@@ -31,6 +31,11 @@ public class PatchTask implements UniqueEntity {
     @ManyToOne
     @JoinColumn(nullable = false)
     private Tag to;
+    /**
+     * If true, a check for upgrade to initialBaseline check has to be performed
+     */
+    @Column(nullable = false)
+    private Boolean baselineCheck;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TaskStatus status;
