@@ -48,8 +48,6 @@ public class CompareTaskV1Test {
                     .sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
                     .forEach(File::delete);
-        } else {
-            Files.createDirectory(patchFolder);
         }
     }
 

@@ -101,7 +101,7 @@ public class CompareTaskV1 {
 
             if (Files.isDirectory(sourceFolder) || Files.isDirectory(initialBaselineFolder)) {
                 patchAction = PatchAction.DELTA;
-                Files.createDirectory(patchFolder);
+                Files.createDirectories(patchFolder);
                 scanDirectory(sourceFolder, subDirectories, files);
             } else {
                 patchAction = PatchAction.ADD;
