@@ -3,7 +3,7 @@ package net.brutus5000.deltaforge.patching;
 import com.google.common.hash.Hashing;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+import org.springframework.util.FileSystemUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,12 +17,14 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class CompareTaskV1 {
+    private final Bsdiff4Service bsdiff4Service;
     private final Path rootSourceFolder;
     private final Path rootInitialBaselineFolder;
     private final Path rootTargetFolder;
     private final Path rootPatchFolder;
 
-    public CompareTaskV1(Path sourceFolder, Path initialBaselineFolder, Path targeteFolder, Path patchFolder) {
+    public CompareTaskV1(Bsdiff4Service bsdiff4Service, Path sourceFolder, Path initialBaselineFolder, Path targeteFolder, Path patchFolder) {
+        this.bsdiff4Service = bsdiff4Service;
         this.rootSourceFolder = sourceFolder;
         this.rootInitialBaselineFolder = initialBaselineFolder;
         this.rootTargetFolder = targeteFolder;
@@ -58,7 +60,7 @@ public class CompareTaskV1 {
                     item.setAction(PatchAction.UNCHANGED);
                 } else {
                     item.setAction(PatchAction.BSDIFF);
-                    // TODO: create bsdiff4 patch file
+                    bsdiff4Service.createPatch(sourceFile, targetFile, patchFile);
                 }
             } else if (Files.isRegularFile(initialBaselineFile)) {
                 item.setBaseCrc(crc32(initialBaselineFile));
@@ -67,7 +69,7 @@ public class CompareTaskV1 {
                     item.setAction(PatchAction.UNCHANGED);
                 } else {
                     item.setAction(PatchAction.BSDIFF_FROM_INITIAL_BASELINE);
-                    // TODO: create bsdiff4 patch file
+                    bsdiff4Service.createPatch(sourceFile, initialBaselineFile, patchFile);
                 }
             } else {
                 item.setAction(PatchAction.ADD);
@@ -122,8 +124,8 @@ public class CompareTaskV1 {
 
         for (Path file : files) {
             PatchItem fileItem;
-            if (isCompressedFile(file)) {
-                fileItem = compareCompressedFile(relativeFolderPath.resolve(file));
+            if (isZipFile(file)) {
+                fileItem = compareZipFile(relativeFolderPath.resolve(file));
             } else {
                 fileItem = compareFile(relativeFolderPath.resolve(file));
             }
@@ -152,11 +154,60 @@ public class CompareTaskV1 {
         }
     }
 
-    private boolean isCompressedFile(@NonNull Path relativeFilePath) {
-        return false;
+    public boolean isZipFile(@NonNull Path relativeFilePath) throws IOException {
+        String contentType = Files.probeContentType(rootTargetFolder.resolve(relativeFilePath));
+        log.debug("Detected content type: " + contentType);
+
+        return Objects.equals(contentType, "application/x-zip-compressed");
     }
 
-    public PatchCompressedItem compareCompressedFile(@NonNull Path relativeFilePath) {
-        throw new NotImplementedException("compressed files is not implemented yet");
+    public PatchCompressedItem compareZipFile(@NonNull Path relativeFilePath) throws IOException {
+        final Path sourceFolder = rootSourceFolder.resolve(relativeFilePath);
+        final Path targetFolder = rootTargetFolder.resolve(relativeFilePath);
+        final Path initialBaselineFolder = rootInitialBaselineFolder.resolve(relativeFilePath);
+        final Path patchFolder = rootPatchFolder.resolve(relativeFilePath);
+
+        Path sourceTemp = Files.createTempDirectory("deltaforge_source_");
+        Path targetTemp = Files.createTempDirectory("deltaforge_target_");
+        Path baselineTemp = Files.createTempDirectory("deltaforge_baseline_");
+
+        PatchCompressedItem item = new PatchCompressedItem()
+                .setName(relativeFilePath.getFileName().toString())
+                .setAlgorithm("zip");
+
+        // if target folder already exists it's either new or delta
+        if (Files.isRegularFile(targetFolder)) {
+            ZipUtils.extractArchiveToFolder(targetFolder, targetTemp);
+
+            if (Files.isRegularFile(sourceFolder)) {
+                if (Objects.equals(crc32(sourceFolder), crc32(targetFolder))) {
+                    item.setAction(PatchAction.UNCHANGED);
+                } else {
+                    ZipUtils.extractArchiveToFolder(sourceFolder, sourceTemp);
+                    CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, sourceFolder, baselineTemp, targetFolder, patchFolder);
+                    PatchMetadata patchMetadata = compareTask.compare();
+                    item.setItems(patchMetadata.getItems());
+                }
+            } else if (Files.isRegularFile(initialBaselineFolder)) {
+                if (Objects.equals(crc32(initialBaselineFolder), crc32(targetFolder))) {
+                    item.setAction(PatchAction.UNCHANGED);
+                } else {
+                    ZipUtils.extractArchiveToFolder(sourceFolder, baselineTemp);
+                    CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, sourceFolder, baselineTemp, targetFolder, patchFolder);
+                    PatchMetadata patchMetadata = compareTask.compare();
+                    item.setItems(patchMetadata.getItems());
+                }
+            } else {
+                item.setAction(PatchAction.ADD);
+            }
+        } else {
+            item.setAction(PatchAction.REMOVE);
+        }
+
+        FileSystemUtils.deleteRecursively(sourceTemp);
+        FileSystemUtils.deleteRecursively(targetTemp);
+        FileSystemUtils.deleteRecursively(baselineTemp);
+
+        return item;
     }
 }

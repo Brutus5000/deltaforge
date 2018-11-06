@@ -6,6 +6,9 @@ import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -17,8 +20,11 @@ import java.util.Objects;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.verify;
 
-public class CompareTaskV1Test {
+@ExtendWith(MockitoExtension.class)
+class CompareTaskV1Test {
     private final static String FILENAME_UNCHANGED = "unchanged.txt";
     private final static String FILENAME_NEW = "new.txt";
     private final static String FILENAME_REMOVED_FROM_SOURCE = "removed-from-source.txt";
@@ -27,6 +33,9 @@ public class CompareTaskV1Test {
     private final static String DIRECTORY_UNCHANGED = "unchanged-folder";
     private final static String DIRECTORY_NEW = "new-folder";
     private final static String DIRECTORY_REMOVED = "removed-folder";
+
+    @Mock
+    private Bsdiff4Service bsdiff4Service;
 
     CompareTaskV1 instance;
 
@@ -37,7 +46,7 @@ public class CompareTaskV1Test {
         String PATCH_NAME = "source_to_target";
         Path patchFolder = Paths.get(FILE_PREFIX + "testRepo/temp/patching/" + PATCH_NAME);
         instance = new CompareTaskV1(
-                Paths.get(FILE_PREFIX + "testRepo/tags/source"),
+                bsdiff4Service, Paths.get(FILE_PREFIX + "testRepo/tags/source"),
                 Paths.get(FILE_PREFIX + "testRepo/tags/initialBaseline"),
                 Paths.get(FILE_PREFIX + "testRepo/tags/target"),
                 patchFolder
@@ -99,6 +108,12 @@ public class CompareTaskV1Test {
                     () -> assertEquals("0x5c428a3d", fileItem.getBaseCrc()),
                     () -> assertEquals("0x2b7fbb9d", fileItem.getTargetCrc())
             );
+
+            verify(bsdiff4Service).createPatch(
+                    argThat(path -> path.toString().endsWith(FILENAME_MODIFIED_FROM_SOURCE)),
+                    argThat(path -> path.toString().endsWith(FILENAME_MODIFIED_FROM_SOURCE)),
+                    argThat(path -> path.toString().endsWith(FILENAME_MODIFIED_FROM_SOURCE))
+            );
         }
 
         @Test
@@ -110,6 +125,22 @@ public class CompareTaskV1Test {
                     () -> assertEquals(PatchAction.BSDIFF_FROM_INITIAL_BASELINE, fileItem.getAction()),
                     () -> assertEquals("0xffc5f2e9", fileItem.getBaseCrc()),
                     () -> assertEquals("0x6fe9f2d6", fileItem.getTargetCrc())
+            );
+
+            verify(bsdiff4Service).createPatch(
+                    argThat(path -> path.toString().endsWith(FILENAME_MODIFIED_FROM_INITIAL)),
+                    argThat(path -> path.toString().endsWith(FILENAME_MODIFIED_FROM_INITIAL)),
+                    argThat(path -> path.toString().endsWith(FILENAME_MODIFIED_FROM_INITIAL))
+            );
+        }
+
+        @Test
+        void isCompressed() throws Exception {
+            String FILE_PREFIX = "./src/test/resources/testArchiveFiles";
+
+            assertAll("content types",
+                    () -> assertTrue(instance.isZipFile(Paths.get(FILE_PREFIX, "archive.zip"))),
+                    () -> assertFalse(instance.isZipFile(Paths.get(FILE_PREFIX, "archive.7z")))
             );
         }
     }

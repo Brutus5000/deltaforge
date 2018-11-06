@@ -20,9 +20,8 @@
 
     <repositories>
         <repository>
-            <id>repository.spring.milestone</id>
-            <name>Spring Milestone Repository</name>
-            <url>http://repo.spring.io/milestone</url>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
         </repository>
     </repositories>
 
@@ -35,6 +34,8 @@
         <jgrapht.version>1.2.0</jgrapht.version>
         <guava.version>26.0-jre</guava.version>
         <mockito.version>2.23.0</mockito.version>
+        <jbsdiff.version>88aaea967dd3211eed88891bcc0609202a5eb74f</jbsdiff.version>
+        <apache-commons-compress.version>1.18</apache-commons-compress.version>
     </properties>
 
     <dependencies>
@@ -50,6 +51,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.github.brutus5000</groupId>
+            <artifactId>jbsdiff</artifactId>
+            <version>${jbsdiff.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>${apache-commons-compress.version}</version>
         </dependency>
 
         <!--
