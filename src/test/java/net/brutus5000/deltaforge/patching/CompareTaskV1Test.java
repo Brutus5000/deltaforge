@@ -29,10 +29,16 @@ class CompareTaskV1Test {
     private final static String FILENAME_NEW = "new.txt";
     private final static String FILENAME_REMOVED_FROM_SOURCE = "removed-from-source.txt";
     private final static String FILENAME_MODIFIED_FROM_SOURCE = "modified-from-source.txt";
-    private final static String FILENAME_MODIFIED_FROM_INITIAL = "modified-from-initial.txt";
     private final static String DIRECTORY_UNCHANGED = "unchanged-folder";
     private final static String DIRECTORY_NEW = "new-folder";
     private final static String DIRECTORY_REMOVED = "removed-folder";
+    private final static String DIRECTORY_ZIP = "zip";
+    private final static String FILENAME_MODIFIED_FROM_INITIAL = "modified-from-initial.txt";
+    private final static String ARCHIVE_UNCHANGED = "unchanged.zip";
+    private final static String ARCHIVE_NEW = "new.zip";
+    private final static String ARCHIVE_REMOVED_FROM_SOURCE = "removed-from-source.zip";
+    private final static String ARCHIVE_MODIFIED_FROM_SOURCE = "modified-from-source.zip";
+    private final static String ARCHIVE_MODIFIED_FROM_INITIAL = "modified-from-initial.zip";
 
     @Mock
     private Bsdiff4Service bsdiff4Service;
@@ -164,6 +170,22 @@ class CompareTaskV1Test {
         }
     }
 
+    @Nested
+    class ArchiveComparison {
+        @Test
+        void compareDirectories() throws Exception {
+            PatchDirectoryItem directoryItem = instance.compareDirectory(Paths.get("zip"));
+
+            assertThat(directoryItem.getItems(), containsInAnyOrder(
+                    patchItemWith(PatchCompressedItem.class, ARCHIVE_UNCHANGED, PatchAction.UNCHANGED),
+                    patchItemWith(PatchCompressedItem.class, ARCHIVE_NEW, PatchAction.ADD),
+                    patchItemWith(PatchCompressedItem.class, ARCHIVE_REMOVED_FROM_SOURCE, PatchAction.REMOVE),
+                    patchItemWith(PatchCompressedItem.class, ARCHIVE_MODIFIED_FROM_SOURCE, PatchAction.COMPRESSED_FILE),
+                    patchItemWith(PatchCompressedItem.class, ARCHIVE_MODIFIED_FROM_INITIAL, PatchAction.COMPRESSED_FILE)
+            ));
+        }
+    }
+
     @Test
     void testCompare() throws Exception {
         PatchMetadata metadata = instance.compare();
@@ -178,7 +200,8 @@ class CompareTaskV1Test {
                         patchItemWith(PatchFileItem.class, FILENAME_MODIFIED_FROM_INITIAL, PatchAction.BSDIFF_FROM_INITIAL_BASELINE),
                         patchItemWith(PatchDirectoryItem.class, DIRECTORY_UNCHANGED, PatchAction.DELTA),
                         patchItemWith(PatchDirectoryItem.class, DIRECTORY_NEW, PatchAction.ADD),
-                        patchItemWith(PatchDirectoryItem.class, DIRECTORY_REMOVED, PatchAction.REMOVE)
+                        patchItemWith(PatchDirectoryItem.class, DIRECTORY_REMOVED, PatchAction.REMOVE),
+                        patchItemWith(PatchDirectoryItem.class, DIRECTORY_ZIP, PatchAction.DELTA)
                 ))
         );
     }

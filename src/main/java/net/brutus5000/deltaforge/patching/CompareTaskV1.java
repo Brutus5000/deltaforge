@@ -23,11 +23,11 @@ public class CompareTaskV1 {
     private final Path rootTargetFolder;
     private final Path rootPatchFolder;
 
-    public CompareTaskV1(Bsdiff4Service bsdiff4Service, Path sourceFolder, Path initialBaselineFolder, Path targeteFolder, Path patchFolder) {
+    public CompareTaskV1(Bsdiff4Service bsdiff4Service, Path sourceFolder, Path initialBaselineFolder, Path targetFolder, Path patchFolder) {
         this.bsdiff4Service = bsdiff4Service;
         this.rootSourceFolder = sourceFolder;
         this.rootInitialBaselineFolder = initialBaselineFolder;
-        this.rootTargetFolder = targeteFolder;
+        this.rootTargetFolder = targetFolder;
         this.rootPatchFolder = patchFolder;
     }
 
@@ -167,9 +167,6 @@ public class CompareTaskV1 {
         final Path initialBaselineFolder = rootInitialBaselineFolder.resolve(relativeFilePath);
         final Path patchFolder = rootPatchFolder.resolve(relativeFilePath);
 
-        Path sourceTemp = Files.createTempDirectory("deltaforge_source_");
-        Path targetTemp = Files.createTempDirectory("deltaforge_target_");
-        Path baselineTemp = Files.createTempDirectory("deltaforge_baseline_");
 
         PatchCompressedItem item = new PatchCompressedItem()
                 .setName(relativeFilePath.getFileName().toString())
@@ -177,25 +174,18 @@ public class CompareTaskV1 {
 
         // if target folder already exists it's either new or delta
         if (Files.isRegularFile(targetFolder)) {
-            ZipUtils.extractArchiveToFolder(targetFolder, targetTemp);
 
             if (Files.isRegularFile(sourceFolder)) {
                 if (Objects.equals(crc32(sourceFolder), crc32(targetFolder))) {
                     item.setAction(PatchAction.UNCHANGED);
                 } else {
-                    ZipUtils.extractArchiveToFolder(sourceFolder, sourceTemp);
-                    CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, sourceFolder, baselineTemp, targetFolder, patchFolder);
-                    PatchMetadata patchMetadata = compareTask.compare();
-                    item.setItems(patchMetadata.getItems());
+                    internalCompareArchive(sourceFolder, targetFolder, patchFolder, item, true);
                 }
             } else if (Files.isRegularFile(initialBaselineFolder)) {
                 if (Objects.equals(crc32(initialBaselineFolder), crc32(targetFolder))) {
                     item.setAction(PatchAction.UNCHANGED);
                 } else {
-                    ZipUtils.extractArchiveToFolder(sourceFolder, baselineTemp);
-                    CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, sourceFolder, baselineTemp, targetFolder, patchFolder);
-                    PatchMetadata patchMetadata = compareTask.compare();
-                    item.setItems(patchMetadata.getItems());
+                    internalCompareArchive(initialBaselineFolder, targetFolder, patchFolder, item, false);
                 }
             } else {
                 item.setAction(PatchAction.ADD);
@@ -204,10 +194,30 @@ public class CompareTaskV1 {
             item.setAction(PatchAction.REMOVE);
         }
 
+        return item;
+    }
+
+    private void internalCompareArchive(Path sourceFolder, Path targetFolder, Path patchFolder, PatchCompressedItem item, boolean fromSource) throws IOException {
+        item.setAction(PatchAction.COMPRESSED_FILE);
+
+        Path targetTemp = Files.createTempDirectory("deltaforge_target_");
+        Path sourceTemp = Files.createTempDirectory("deltaforge_source_");
+        Path baselineTemp = Files.createTempDirectory("deltaforge_baseline_");
+
+        ZipUtils.extractArchiveToFolder(targetFolder, targetTemp);
+        if (fromSource) {
+            ZipUtils.extractArchiveToFolder(sourceFolder, sourceTemp);
+        } else {
+            ZipUtils.extractArchiveToFolder(sourceFolder, baselineTemp);
+        }
+        CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, sourceTemp, baselineTemp, targetTemp, patchFolder);
+        PatchMetadata patchMetadata = compareTask.compare();
+        item.setItems(patchMetadata.getItems());
+
         FileSystemUtils.deleteRecursively(sourceTemp);
         FileSystemUtils.deleteRecursively(targetTemp);
         FileSystemUtils.deleteRecursively(baselineTemp);
-
-        return item;
     }
+
+
 }
