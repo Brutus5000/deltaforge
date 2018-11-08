@@ -20,7 +20,9 @@ import java.util.Objects;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,6 +41,7 @@ class CompareTaskV1Test {
     private final static String ARCHIVE_REMOVED_FROM_SOURCE = "removed-from-source.zip";
     private final static String ARCHIVE_MODIFIED_FROM_SOURCE = "modified-from-source.zip";
     private final static String ARCHIVE_MODIFIED_FROM_INITIAL = "modified-from-initial.zip";
+    private final static String FOLDER_ZIP = "zip";
 
     @Mock
     private Bsdiff4Service bsdiff4Service;
@@ -175,7 +178,7 @@ class CompareTaskV1Test {
     class ArchiveComparison {
         @Test
         void compareDirectories() throws Exception {
-            PatchDirectoryItem directoryItem = instance.compareDirectory(Paths.get("zip"));
+            PatchDirectoryItem directoryItem = instance.compareDirectory(Paths.get(FOLDER_ZIP));
 
             assertThat(directoryItem.getItems(), containsInAnyOrder(
                     patchItemWith(PatchCompressedItem.class, ARCHIVE_UNCHANGED, PatchAction.UNCHANGED),
@@ -184,6 +187,66 @@ class CompareTaskV1Test {
                     patchItemWith(PatchCompressedItem.class, ARCHIVE_MODIFIED_FROM_SOURCE, PatchAction.COMPRESSED_FILE),
                     patchItemWith(PatchCompressedItem.class, ARCHIVE_MODIFIED_FROM_INITIAL, PatchAction.COMPRESSED_FILE)
             ));
+        }
+
+        @Test
+        void compareZipUnchanged() throws Exception {
+            PatchCompressedItem item = instance.compareZipFile(Paths.get(FOLDER_ZIP, ARCHIVE_UNCHANGED));
+
+            assertAll("item",
+                    () -> assertEquals(ARCHIVE_UNCHANGED, item.getName()),
+                    () -> assertEquals(PatchAction.UNCHANGED, item.getAction())
+            );
+
+            verify(bsdiff4Service, never()).createPatch(any(Path.class), any(Path.class), any(Path.class));
+        }
+
+        @Test
+        void compareZipNew() throws Exception {
+            PatchCompressedItem item = instance.compareZipFile(Paths.get(FOLDER_ZIP, ARCHIVE_NEW));
+
+            assertAll("item",
+                    () -> assertEquals(ARCHIVE_NEW, item.getName()),
+                    () -> assertEquals(PatchAction.ADD, item.getAction())
+            );
+
+            verify(bsdiff4Service, never()).createPatch(any(Path.class), any(Path.class), any(Path.class));
+        }
+
+        @Test
+        void compareZipRemovedFromSource() throws Exception {
+            PatchCompressedItem item = instance.compareZipFile(Paths.get(FOLDER_ZIP, ARCHIVE_REMOVED_FROM_SOURCE));
+
+            assertAll("item",
+                    () -> assertEquals(ARCHIVE_REMOVED_FROM_SOURCE, item.getName()),
+                    () -> assertEquals(PatchAction.REMOVE, item.getAction())
+            );
+
+            verify(bsdiff4Service, never()).createPatch(any(Path.class), any(Path.class), any(Path.class));
+        }
+
+        @Test
+        void compareZipModifiedFromSource() throws Exception {
+            PatchCompressedItem item = instance.compareZipFile(Paths.get(FOLDER_ZIP, ARCHIVE_MODIFIED_FROM_SOURCE));
+
+            assertAll("item",
+                    () -> assertEquals(ARCHIVE_MODIFIED_FROM_SOURCE, item.getName()),
+                    () -> assertEquals(PatchAction.COMPRESSED_FILE, item.getAction())
+            );
+
+            verify(bsdiff4Service).createPatch(any(Path.class), any(Path.class), any(Path.class));
+        }
+
+        @Test
+        void compareZipModifiedFromInitial() throws Exception {
+            PatchCompressedItem item = instance.compareZipFile(Paths.get(FOLDER_ZIP, ARCHIVE_MODIFIED_FROM_INITIAL));
+
+            assertAll("item",
+                    () -> assertEquals(ARCHIVE_MODIFIED_FROM_INITIAL, item.getName()),
+                    () -> assertEquals(PatchAction.COMPRESSED_FILE, item.getAction())
+            );
+
+            verify(bsdiff4Service).createPatch(any(Path.class), any(Path.class), any(Path.class));
         }
     }
 
