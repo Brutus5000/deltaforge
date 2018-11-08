@@ -165,7 +165,8 @@ class CompareTaskV1Test {
                     patchItemWith(PatchFileItem.class, FILENAME_MODIFIED_FROM_INITIAL, PatchAction.BSDIFF_FROM_INITIAL_BASELINE),
                     patchItemWith(PatchDirectoryItem.class, DIRECTORY_UNCHANGED, PatchAction.DELTA),
                     patchItemWith(PatchDirectoryItem.class, DIRECTORY_NEW, PatchAction.ADD),
-                    patchItemWith(PatchDirectoryItem.class, DIRECTORY_REMOVED, PatchAction.REMOVE)
+                    patchItemWith(PatchDirectoryItem.class, DIRECTORY_REMOVED, PatchAction.REMOVE),
+                    patchItemWith(PatchDirectoryItem.class, DIRECTORY_ZIP, PatchAction.DELTA)
             ));
         }
     }
