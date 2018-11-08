@@ -102,7 +102,7 @@ public class RepoService {
                 .setBranch(branch)
                 .setTag(tag);
 
-        log.debug("Creating tag assignment for branch id ''{}'': {}", branchId, tagAssignment);
+        log.debug("Creating tag assignment for branch id '{}': {}", branchId, tagAssignment);
         tagAssignmentRepository.save(tagAssignment);
 
         if (tagType == TagType.SOURCE) {
@@ -113,7 +113,7 @@ public class RepoService {
             enqueuePatch(tag, branch.getCurrentTag(), false);
         }
 
-        log.debug("Updating branch ''{}'' current tag to: {}", branch, tag);
+        log.debug("Updating branch '{}' current tag to: {}", branch, tag);
         branch.setCurrentTag(tag);
         branchRepository.save(branch);
     }
@@ -143,23 +143,23 @@ public class RepoService {
             GraphPath<Tag, Patch> path = shortestPathAlgorithm.getPath(branch.getCurrentBaseline(), patch.getTo());
 
             if (path.getWeight() > properties.getBaselineFilesizeThreshold()) {
-                log.debug("Patch path filesize ''{}'' exceeds initialBaseline threshold of ''{}''.", path.getWeight(), properties.getBaselineFilesizeThreshold());
+                log.debug("Patch path filesize '{}' exceeds initialBaseline threshold of '{}'.", path.getWeight(), properties.getBaselineFilesizeThreshold());
                 upgradeTagToBaseline(patch.getTo());
             } else {
-                log.debug("Patch path filesize ''{}'' below initialBaseline threshold of ''{}''.", path.getWeight(), properties.getBaselineFilesizeThreshold());
+                log.debug("Patch path filesize '{}' below initialBaseline threshold of '{}'.", path.getWeight(), properties.getBaselineFilesizeThreshold());
             }
         }
     }
 
     @Transactional
     public void upgradeTagToBaseline(@NonNull Tag tag) {
-        log.info("Upgrading tag to initialBaseline: ''{}''", tag);
+        log.info("Upgrading tag to initialBaseline: '{}'", tag);
         tag.setType(TagType.BASELINE);
         tagRepository.save(tag);
 
         Set<Tag> baselineTags = tagRepository.findAllByRepositoryAndType(tag.getRepository(), TagType.BASELINE);
         for (Tag baseline : baselineTags) {
-            log.debug("Enqueuing patches initialBaseline ''{}'' <-> new tag ''{}''");
+            log.debug("Enqueuing patches initialBaseline '{}' <-> new tag '{}'");
             enqueuePatch(baseline, tag, false);
             enqueuePatch(tag, baseline, false);
         }

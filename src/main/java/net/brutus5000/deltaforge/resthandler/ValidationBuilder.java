@@ -23,7 +23,7 @@ public class ValidationBuilder {
     }
 
     private void add(ErrorCode errorCode, Object... args) {
-        log.debug("ErrorCode ''{}'' was added to list. Arguments: {}", errorCode, args);
+        log.debug("ErrorCode '{}' was added to list. Arguments: {}", errorCode, args);
         errors.add(new Error(errorCode, args));
     }
 

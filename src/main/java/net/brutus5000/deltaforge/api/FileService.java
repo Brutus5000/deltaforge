@@ -85,7 +85,7 @@ public class FileService {
                 .setBranch(newBranch)
                 .setTag(baseTag);
 
-        log.debug("Creating tag assignment for new branch id ''{}'': {}", newBranch.getId(), tagAssignment);
+        log.debug("Creating tag assignment for new branch id '{}': {}", newBranch.getId(), tagAssignment);
         tagAssignmentRepository.save(tagAssignment);
     }
 
@@ -100,7 +100,7 @@ public class FileService {
                 .setBranch(branch)
                 .setTag(sourceTag);
 
-        log.debug("Creating tag assignment for branch id ''{}'': {}", branch.getId(), tagAssignment);
+        log.debug("Creating tag assignment for branch id '{}': {}", branch.getId(), tagAssignment);
         tagAssignmentRepository.save(tagAssignment);
 
         PatchTask patchTask = new PatchTask()
