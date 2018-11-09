@@ -60,7 +60,6 @@ class BranchEventHandlerTest {
                         ErrorCode.PROPERTY_IS_NULL,
                         ErrorCode.PROPERTY_IS_NULL,
                         ErrorCode.PROPERTY_IS_NULL,
-                        ErrorCode.PROPERTY_IS_NULL,
                         ErrorCode.PROPERTY_IS_NULL
                 ));
             }
@@ -77,7 +76,6 @@ class BranchEventHandlerTest {
                         ErrorCode.STRING_IS_EMPTY,
                         ErrorCode.PROPERTY_IS_NULL,
                         ErrorCode.PROPERTY_IS_NULL,
-                        ErrorCode.PROPERTY_IS_NULL,
                         ErrorCode.PROPERTY_IS_NULL
                 ));
             }
@@ -88,7 +86,6 @@ class BranchEventHandlerTest {
                 Branch branch = new Branch()
                         .setRepository(repository)
                         .setName(BRANCH_NAME)
-                        .setInitialBaseline(mock(Tag.class))
                         .setCurrentBaseline(mock(Tag.class))
                         .setCurrentTag(mock(Tag.class));
 
@@ -104,7 +101,6 @@ class BranchEventHandlerTest {
             Branch branch = new Branch()
                     .setRepository(repository)
                     .setName(BRANCH_NAME)
-                    .setInitialBaseline(mock(Tag.class))
                     .setCurrentBaseline(mock(Tag.class))
                     .setCurrentTag(mock(Tag.class));
 
@@ -130,7 +126,6 @@ class BranchEventHandlerTest {
                     .setId(UUID.randomUUID())
                     .setName(BRANCH_NAME)
                     .setRepository(repository)
-                    .setInitialBaseline(tag)
                     .setCurrentBaseline(tag)
                     .setCurrentTag(tag);
 
@@ -138,7 +133,6 @@ class BranchEventHandlerTest {
                     .setId(preUpdate.getId())
                     .setName(BRANCH_NAME)
                     .setRepository(repository)
-                    .setInitialBaseline(tag)
                     .setCurrentBaseline(tag)
                     .setCurrentTag(tag);
 
@@ -163,19 +157,6 @@ class BranchEventHandlerTest {
                 ApiException exception = assertThrows(ApiException.class, () -> branchEventHandler.handleBeforeSave(branch));
 
                 assertThat(exception, apiExceptionWithCode(ErrorCode.REPOSITORY_FIXED));
-            }
-
-            @Test
-            void thenHandleBeforeSaveShouldFailOnChangingInitialBaseline() {
-                branch.setInitialBaseline(new Tag()
-                        .setId(UUID.randomUUID())
-                        .setName("someNewTag"));
-
-                when(branchRepository.findById(any())).thenReturn(Optional.of(preUpdate));
-
-                ApiException exception = assertThrows(ApiException.class, () -> branchEventHandler.handleBeforeSave(branch));
-
-                assertThat(exception, apiExceptionWithCode(ErrorCode.BRANCH_BASELINE_FIXED));
             }
 
             @Test

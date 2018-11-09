@@ -37,9 +37,6 @@ public class Branch implements UniqueEntity {
     private Repository repository;
     @OneToOne
     @JoinColumn(nullable = false)
-    private Tag initialBaseline;
-    @OneToOne
-    @JoinColumn(nullable = false)
     private Tag currentBaseline;
     @OneToOne
     @JoinColumn(nullable = false)

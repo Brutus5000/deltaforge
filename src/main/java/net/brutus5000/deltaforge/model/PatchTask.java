@@ -27,6 +27,9 @@ public class PatchTask implements UniqueEntity {
     private OffsetDateTime updatedAt;
     @ManyToOne
     @JoinColumn(nullable = false)
+    private Tag initialBaseline;
+    @ManyToOne
+    @JoinColumn(nullable = false)
     private Tag from;
     @ManyToOne
     @JoinColumn(nullable = false)

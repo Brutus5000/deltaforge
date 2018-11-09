@@ -6,10 +6,7 @@ import net.brutus5000.deltaforge.config.DeltaForgeProperties;
 import net.brutus5000.deltaforge.error.ApiException;
 import net.brutus5000.deltaforge.error.ErrorCode;
 import net.brutus5000.deltaforge.model.*;
-import net.brutus5000.deltaforge.repository.BranchRepository;
-import net.brutus5000.deltaforge.repository.PatchTaskRepository;
-import net.brutus5000.deltaforge.repository.TagAssignmentRepository;
-import net.brutus5000.deltaforge.repository.TagRepository;
+import net.brutus5000.deltaforge.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -25,19 +22,28 @@ public class FileService {
     private final static String TAGS_FOLDER = "tags";
 
     private final DeltaForgeProperties properties;
-    private final RepoService repoService;
+    private final RepositoryRepository repositoryRepository;
     private final BranchRepository branchRepository;
     private final TagRepository tagRepository;
     private final TagAssignmentRepository tagAssignmentRepository;
     private final PatchTaskRepository patchTaskRepository;
 
-    public FileService(DeltaForgeProperties properties, RepoService repoService, BranchRepository branchRepository, TagRepository tagRepository, TagAssignmentRepository tagAssignmentRepository, PatchTaskRepository patchTaskRepository) {
+    public FileService(DeltaForgeProperties properties, RepositoryRepository repositoryRepository, BranchRepository branchRepository, TagRepository tagRepository, TagAssignmentRepository tagAssignmentRepository, PatchTaskRepository patchTaskRepository) {
         this.properties = properties;
-        this.repoService = repoService;
+        this.repositoryRepository = repositoryRepository;
         this.branchRepository = branchRepository;
         this.tagRepository = tagRepository;
         this.tagAssignmentRepository = tagAssignmentRepository;
         this.patchTaskRepository = patchTaskRepository;
+    }
+
+    public boolean existsTagFolderPath(@NonNull RepositoryCreate repositoryCreate) {
+        Path path = buildTagFolderPath(repositoryCreate.getName(), repositoryCreate.getInitialBaseline());
+        if (path == null) {
+            return false;
+        }
+
+        return Files.exists(path);
     }
 
     public boolean existsTagFolderPath(@NonNull Tag tag) {
@@ -47,17 +53,22 @@ public class FileService {
         if (tag.getName() == null)
             return false;
 
-        return Files.exists(buildTagFolderPath(tag));
+        return Files.exists(buildTagFolderPath(tag.getRepository().getName(), tag.getName()));
     }
 
-    public Path buildTagFolderPath(@NonNull Tag tag) {
-        Assert.notNull(tag.getRepository(), "Tag must have a repository");
-        Assert.notNull(tag.getName(), "Tag must have a name");
-        return Paths.get(properties.getRootRepositoryPath(), tag.getRepository().getName(), TAGS_FOLDER, tag.getName());
+    public Path buildTagFolderPath(String repositoryName, String tagName) {
+        try {
+            Assert.notNull(repositoryName, "repositoryName must not be null");
+            Assert.notNull(tagName, "tagName must not be null");
+            return Paths.get(properties.getRootRepositoryPath(), repositoryName, TAGS_FOLDER, tagName);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     public void createBranch(@NonNull UUID repositoryId, @NonNull String name, @NonNull UUID baseTagId) {
-        Repository repository = repoService.findById(repositoryId);
+        Repository repository = repositoryRepository.findById(repositoryId)
+                .orElseThrow(() -> ApiException.of(ErrorCode.REPOSITORY_NOT_FOUND, repositoryId));
 
         Tag baseTag = tagRepository.findById(baseTagId)
                 .orElseThrow(() -> ApiException.of(ErrorCode.TAG_NOT_FOUND, baseTagId));
@@ -74,7 +85,6 @@ public class FileService {
         Branch newBranch = new Branch()
                 .setRepository(repository)
                 .setName(name)
-                .setInitialBaseline(baseTag)
                 .setCurrentBaseline(baseTag)
                 .setCurrentTag(baseTag);
 
@@ -106,7 +116,7 @@ public class FileService {
         PatchTask patchTask = new PatchTask()
                 .setStatus(TaskStatus.PENDING)
                 .setFrom(sourceTag)
-                .setTo(branch.getInitialBaseline());
+                .setTo(branch.getRepository().getInitialBaseline());
 
         log.debug("Creating patch task: {}", patchTask);
         patchTaskRepository.save(patchTask);

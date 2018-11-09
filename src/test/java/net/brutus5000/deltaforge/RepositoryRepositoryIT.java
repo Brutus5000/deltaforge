@@ -3,11 +3,13 @@ package net.brutus5000.deltaforge;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.brutus5000.deltaforge.error.ErrorCode;
 import net.brutus5000.deltaforge.model.Repository;
+import net.brutus5000.deltaforge.model.RepositoryCreate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -17,8 +19,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -58,48 +59,71 @@ class RepositoryRepositoryIT {
 
     @Test
     void GivenEmptyDatabase__WhenPostEmptyRepository__ShouldFailWithErrors() throws Exception {
-        Repository repository = new Repository();
+        RepositoryCreate repository = new RepositoryCreate();
 
         mockMvc.perform(post("/api/v1/repositories")
+                .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(repository)))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.errors[*].code", contains(
-                        ErrorCode.PROPERTY_IS_NULL.codeAsString()
+                .andExpect(jsonPath("$.errors[*].code", containsInAnyOrder(
+                        ErrorCode.PROPERTY_IS_NULL.codeAsString(),
+                        ErrorCode.PROPERTY_IS_NULL.codeAsString(),
+                        ErrorCode.TAG_FOLDER_NOT_EXISTS.codeAsString()
                 )))
-                .andExpect(jsonPath("$.errors[*].meta.args[*]", contains(
-                        "name"
+                .andExpect(jsonPath("$.errors[*].meta.args[*]", containsInAnyOrder(
+                        "name",
+                        "initialBaseline"
                 )));
     }
 
     @Test
     void GivenEmptyDatabase__WhenPostRepositoryWithEmptyName__ShouldFailWithErrors() throws Exception {
-        Repository repository = new Repository()
+        RepositoryCreate repository = new RepositoryCreate()
                 .setName("");
 
         mockMvc.perform(post("/api/v1/repositories")
+                .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(repository)))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.errors[*].code", contains(
-                        ErrorCode.STRING_IS_EMPTY.codeAsString()
+                        ErrorCode.STRING_IS_EMPTY.codeAsString(),
+                        ErrorCode.PROPERTY_IS_NULL.codeAsString(),
+                        ErrorCode.TAG_FOLDER_NOT_EXISTS.codeAsString()
                 )))
                 .andExpect(jsonPath("$.errors[*].meta.args[*]", contains(
-                        "name"
+                        "name",
+                        "initialBaseline"
+                )));
+    }
+
+    @Test
+    void GivenEmptyDatabase__WhenPostRepositoryMissingFolder__ShouldFailWithErrors() throws Exception {
+        RepositoryCreate repository = new RepositoryCreate()
+                .setName("testRep")
+                .setInitialBaseline("nonExistingFolder");
+
+        mockMvc.perform(post("/api/v1/repositories")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(repository)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errors[*].code", contains(
+                        ErrorCode.TAG_FOLDER_NOT_EXISTS.codeAsString()
                 )));
     }
 
     @Test
     void GivenEmptyDatabase__WhenPostValidRepository__ShouldReturnCreatedRepository() throws Exception {
-        Repository repository = new Repository()
-                .setName("testRepository");
+        RepositoryCreate repository = new RepositoryCreate()
+                .setName("testRepo")
+                .setInitialBaseline("initialBaseline");
 
         MvcResult mvcResult = mockMvc.perform(post("/api/v1/repositories")
+                .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(repository)))
                 .andExpect(status().isCreated())
                 .andReturn();
 
         Repository returned = fetchFromMockMvc(mvcResult);
-
-        repository.setId(repository.getId());
 
         assertThat(repository.getName(), is(returned.getName()));
     }
@@ -108,17 +132,19 @@ class RepositoryRepositoryIT {
     void GivenExistingRepositories__WhenPostRepositoryWithExistingName__ShouldFailWithErrors() throws Exception {
         GivenEmptyDatabase__WhenPostValidRepository__ShouldReturnCreatedRepository();
 
-        Repository repository = new Repository()
-                .setName("");
+        RepositoryCreate repository = new RepositoryCreate()
+                .setName("testRepo")
+                .setInitialBaseline("initialBaseline");
 
         mockMvc.perform(post("/api/v1/repositories")
+                .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(repository)))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.errors[*].code", contains(
-                        ErrorCode.STRING_IS_EMPTY.codeAsString()
+                        ErrorCode.REPOSITORY_NAME_IN_USE.codeAsString()
                 )))
                 .andExpect(jsonPath("$.errors[*].meta.args[*]", contains(
-                        "name"
+                        "testRepo"
                 )));
     }
 }

@@ -52,14 +52,14 @@ class TagEventHandlerTest {
         class WhenCreating {
             @BeforeEach
             void beforeEach() throws Exception {
-                when(fileService.existsTagFolderPath(any())).thenReturn(true);
+                //when(fileService.existsTagFolderPath(any(Tag.class))).thenReturn(true);
             }
 
             @Test
             void thenHandleBeforeCreateShouldFailOnEmptyTag() {
                 Tag tag = new Tag();
                 when(tagRepository.findByRepositoryAndName(null, null)).thenReturn(Optional.empty());
-                when(fileService.existsTagFolderPath(any())).thenReturn(false);
+                when(fileService.existsTagFolderPath(any(Tag.class))).thenReturn(false);
 
                 ApiException exception = assertThrows(ApiException.class, () -> tagEventHandler.handleBeforeCreate(tag));
 
@@ -82,12 +82,14 @@ class TagEventHandlerTest {
 
                 ApiException exception = assertThrows(ApiException.class, () -> tagEventHandler.handleBeforeCreate(tag));
 
-                assertThat(exception, apiExceptionWithCode(ErrorCode.STRING_IS_EMPTY));
+                assertThat(exception, apiExceptionWithCode(ErrorCode.STRING_IS_EMPTY, ErrorCode.TAG_FOLDER_NOT_EXISTS));
             }
 
             @Test
             void thenHandleBeforeCreateShouldPassOnValidRepository() {
                 when(tagRepository.findByRepositoryAndName(repository, TAG_NAME)).thenReturn(Optional.empty());
+                when(fileService.existsTagFolderPath(any(Tag.class))).thenReturn(true);
+
                 Tag tag = new Tag()
                         .setRepository(repository)
                         .setName(TAG_NAME)
@@ -106,7 +108,7 @@ class TagEventHandlerTest {
 
             @BeforeEach
             void beforeEach() throws Exception {
-                when(fileService.existsTagFolderPath(any())).thenReturn(true);
+                when(fileService.existsTagFolderPath(any(Tag.class))).thenReturn(true);
 
                 tag = new Tag()
                         .setRepository(repository)

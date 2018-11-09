@@ -6,7 +6,6 @@ import net.brutus5000.deltaforge.error.ErrorCode;
 import net.brutus5000.deltaforge.error.NotFoundApiException;
 import net.brutus5000.deltaforge.model.Repository;
 import net.brutus5000.deltaforge.repository.RepositoryRepository;
-import org.springframework.data.rest.core.annotation.HandleBeforeCreate;
 import org.springframework.data.rest.core.annotation.HandleBeforeSave;
 import org.springframework.stereotype.Component;
 
@@ -25,20 +24,6 @@ public class RepositoryEventHandler {
     public RepositoryEventHandler(RepositoryRepository repositoryRepository, EntityManager entityManager) {
         this.repositoryRepository = repositoryRepository;
         this.entityManager = entityManager;
-    }
-
-    @HandleBeforeCreate
-    public void handleBeforeCreate(Repository repository) {
-        new ValidationBuilder()
-                .assertNotBlank(repository.getName(), "name")
-                .assertNotExists(
-                        repositoryRepository::findByName, repository.getName(),
-                        ErrorCode.REPOSITORY_NAME_IN_USE, repository.getName())
-                .conditionalAssertNotExists(
-                        whenNotNull(repository.getGitUrl()),
-                        repositoryRepository::findByGitUrl, repository.getGitUrl(),
-                        ErrorCode.REPOSITORY_GIT_URL_IN_USE, repository.getName())
-                .validate();
     }
 
     @HandleBeforeSave
@@ -61,6 +46,7 @@ public class RepositoryEventHandler {
                         ),
                         repositoryRepository::findByGitUrl, repository.getGitUrl(),
                         ErrorCode.REPOSITORY_GIT_URL_IN_USE, repository.getName())
+                .assertUnchanged(repository.getInitialBaseline(), preUpdate.getInitialBaseline(), ErrorCode.REPOSITORY_BASELINE_FIXED)
                 .validate();
     }
 }

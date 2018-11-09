@@ -1,5 +1,6 @@
 package net.brutus5000.deltaforge.api;
 
+import com.google.common.annotations.VisibleForTesting;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.brutus5000.deltaforge.config.DeltaForgeProperties;
@@ -9,6 +10,7 @@ import net.brutus5000.deltaforge.events.PatchCreatedEvent;
 import net.brutus5000.deltaforge.events.TagCreatedEvent;
 import net.brutus5000.deltaforge.model.*;
 import net.brutus5000.deltaforge.repository.*;
+import net.brutus5000.deltaforge.resthandler.ValidationBuilder;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.BidirectionalDijkstraShortestPath;
@@ -17,7 +19,11 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.*;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+import static net.brutus5000.deltaforge.resthandler.ValidationBuilder.whenNotNull;
 
 @Service
 @Slf4j
@@ -29,10 +35,9 @@ public class RepoService {
     private final TagRepository tagRepository;
     private final TagAssignmentRepository tagAssignmentRepository;
     private final PatchRepository patchRepository;
+    private final FileService fileService;
 
-    Map<UUID, Repository> loadedRepositories = new HashMap<>();
-
-    public RepoService(DeltaForgeProperties properties, RepositoryRepository repositoryRepository, BranchRepository branchRepository, PatchTaskRepository patchTaskRepository, TagRepository tagRepository, TagAssignmentRepository tagAssignmentRepository, PatchRepository patchRepository) {
+    public RepoService(DeltaForgeProperties properties, RepositoryRepository repositoryRepository, BranchRepository branchRepository, PatchTaskRepository patchTaskRepository, TagRepository tagRepository, TagAssignmentRepository tagAssignmentRepository, PatchRepository patchRepository, FileService fileService) {
         this.properties = properties;
         this.repositoryRepository = repositoryRepository;
         this.branchRepository = branchRepository;
@@ -40,20 +45,43 @@ public class RepoService {
         this.tagRepository = tagRepository;
         this.tagAssignmentRepository = tagAssignmentRepository;
         this.patchRepository = patchRepository;
+        this.fileService = fileService;
     }
 
-    @Transactional
-    public Repository findById(@NonNull UUID repositoryId) {
-        if (loadedRepositories.containsKey(repositoryId)) {
-            return loadedRepositories.get(repositoryId);
-        }
+    @VisibleForTesting
+    public void validateCreate(@NonNull RepositoryCreate repositoryCreate) {
+        new ValidationBuilder()
+                .assertNotBlank(repositoryCreate.getName(), "name")
+                .assertNotExists(
+                        repositoryRepository::findByName, repositoryCreate.getName(),
+                        ErrorCode.REPOSITORY_NAME_IN_USE, repositoryCreate.getName())
+                .assertNotNull(repositoryCreate.getInitialBaseline(), "initialBaseline")
+                .assertThat(fileService::existsTagFolderPath, repositoryCreate, ErrorCode.TAG_FOLDER_NOT_EXISTS)
+                .conditionalAssertNotExists(
+                        whenNotNull(repositoryCreate.getGitUrl()),
+                        repositoryRepository::findByGitUrl, repositoryCreate.getGitUrl(),
+                        ErrorCode.REPOSITORY_GIT_URL_IN_USE, repositoryCreate.getName())
+                .validate();
+    }
 
-        final Repository repository = repositoryRepository.findById(repositoryId)
-                .orElseThrow(() -> ApiException.of(ErrorCode.REPOSITORY_NOT_FOUND, repositoryId));
+    public Repository createRepository(@NonNull RepositoryCreate repositoryCreate) {
+        validateCreate(repositoryCreate);
 
-        loadedRepositories.put(repositoryId, repository);
+        Repository repository = new Repository()
+                .setName(repositoryCreate.getName())
+                .setGitUrl(repositoryCreate.getGitUrl());
 
-        repository.setPatchGraph(buildGraph(repository));
+        repositoryRepository.saveAndFlush(repository);
+
+        Tag initialBaselineTag = new Tag()
+                .setName(repositoryCreate.getInitialBaseline())
+                .setRepository(repository)
+                .setType(TagType.BASELINE);
+
+        tagRepository.saveAndFlush(initialBaselineTag);
+
+        repository.setInitialBaseline(initialBaselineTag);
+        repositoryRepository.save(repository);
 
         return repository;
     }
@@ -74,9 +102,10 @@ public class RepoService {
         return graph;
     }
 
-    private void enqueuePatch(@NonNull Tag from, @NonNull Tag to, boolean baselineCheck) {
+    private void enqueuePatch(@NonNull Tag initialBaseline, @NonNull Tag from, @NonNull Tag to, boolean baselineCheck) {
         PatchTask currentToBaselinePatchTask = new PatchTask()
                 .setStatus(TaskStatus.PENDING)
+                .setInitialBaseline(initialBaseline)
                 .setFrom(from)
                 .setTo(to)
                 .setBaselineCheck(baselineCheck);
@@ -105,12 +134,14 @@ public class RepoService {
         log.debug("Creating tag assignment for branch id '{}': {}", branchId, tagAssignment);
         tagAssignmentRepository.save(tagAssignment);
 
+        Tag initialBaselineTag = branch.getRepository().getInitialBaseline();
+
         if (tagType == TagType.SOURCE) {
-            enqueuePatch(branch.getCurrentBaseline(), tag, false);
-            enqueuePatch(tag, branch.getCurrentBaseline(), false);
+            enqueuePatch(initialBaselineTag, branch.getCurrentBaseline(), tag, false);
+            enqueuePatch(initialBaselineTag, tag, branch.getCurrentBaseline(), false);
         } else {
-            enqueuePatch(branch.getCurrentTag(), tag, true);
-            enqueuePatch(tag, branch.getCurrentTag(), false);
+            enqueuePatch(initialBaselineTag, branch.getCurrentTag(), tag, true);
+            enqueuePatch(initialBaselineTag, tag, branch.getCurrentTag(), false);
         }
 
         log.debug("Updating branch '{}' current tag to: {}", branch, tag);
@@ -157,11 +188,12 @@ public class RepoService {
         tag.setType(TagType.BASELINE);
         tagRepository.save(tag);
 
+        Tag initialBaselineTag = tag.getRepository().getInitialBaseline();
         Set<Tag> baselineTags = tagRepository.findAllByRepositoryAndType(tag.getRepository(), TagType.BASELINE);
         for (Tag baseline : baselineTags) {
             log.debug("Enqueuing patches initialBaseline '{}' <-> new tag '{}'");
-            enqueuePatch(baseline, tag, false);
-            enqueuePatch(tag, baseline, false);
+            enqueuePatch(initialBaselineTag, baseline, tag, false);
+            enqueuePatch(initialBaselineTag, tag, baseline, false);
         }
 
         Set<Branch> patchedBranches = branchRepository.findAllByCurrentTag(tag);

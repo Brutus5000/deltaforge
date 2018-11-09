@@ -55,7 +55,8 @@ class RepoServiceTest {
     void beforeEach() {
         repository = new Repository()
                 .setId(UUID.randomUUID())
-                .setPatchGraph(repositoryGraph);
+                .setPatchGraph(repositoryGraph)
+                .setInitialBaseline(new Tag().setName("initialBaseline"));
 
         branch = new Branch()
                 .setId(UUID.randomUUID())

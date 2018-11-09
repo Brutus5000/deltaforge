@@ -16,6 +16,11 @@ spring:
       default-page-size: 100
       max-page-size: 1000
       enable-enum-translation: true
+
+deltaforge:
+  root-repository-path: src/test/resources
+
 logging:
   level:
+    #    org.springframework: DEBUG
     net.brutus5000: DEBUG

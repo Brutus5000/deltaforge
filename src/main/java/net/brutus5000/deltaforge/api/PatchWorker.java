@@ -7,6 +7,7 @@ import net.brutus5000.deltaforge.events.PatchCreatedEvent;
 import net.brutus5000.deltaforge.model.Patch;
 import net.brutus5000.deltaforge.model.PatchTask;
 import net.brutus5000.deltaforge.model.TaskStatus;
+import net.brutus5000.deltaforge.patching.Bsdiff4Service;
 import net.brutus5000.deltaforge.repository.PatchRepository;
 import net.brutus5000.deltaforge.repository.PatchTaskRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -22,13 +23,17 @@ public class PatchWorker {
     private final DeltaForgeProperties properties;
     private final PatchRepository patchRepository;
     private final PatchTaskRepository patchTaskRepository;
+    private final Bsdiff4Service bsdiff4Service;
     private PatchTask current;
 
-    public PatchWorker(ApplicationEventPublisher applicationEventPublisher, DeltaForgeProperties properties, PatchRepository patchRepository, PatchTaskRepository patchTaskRepository) {
+    public PatchWorker(ApplicationEventPublisher applicationEventPublisher, DeltaForgeProperties properties,
+                       PatchRepository patchRepository, PatchTaskRepository patchTaskRepository,
+                       Bsdiff4Service bsdiff4Service) {
         this.applicationEventPublisher = applicationEventPublisher;
         this.properties = properties;
         this.patchRepository = patchRepository;
         this.patchTaskRepository = patchTaskRepository;
+        this.bsdiff4Service = bsdiff4Service;
     }
 
     @Scheduled(fixedDelay = 1000)
@@ -71,6 +76,7 @@ public class PatchWorker {
 
         try {
             Thread.sleep(1000);
+            //CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, patchTask.getFrom().getRepository().ge)
         } catch (InterruptedException ignored) {
         }
 

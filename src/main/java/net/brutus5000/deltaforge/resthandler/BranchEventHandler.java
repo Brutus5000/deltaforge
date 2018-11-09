@@ -32,7 +32,6 @@ public class BranchEventHandler {
         return validationBuilder
                 .assertNotBlank(branch.getName(), "name")
                 .assertNotNull(branch.getRepository(), "repository")
-                .assertNotNull(branch.getInitialBaseline(), "initialBaseline")
                 .assertNotNull(branch.getCurrentBaseline(), "currentBaseline")
                 .assertNotNull(branch.getCurrentTag(), "currentTag");
     }
@@ -60,7 +59,6 @@ public class BranchEventHandler {
                         o -> branchRepository.findByRepositoryAndName(o.getRepository(), o.getName()),
                         branch, ErrorCode.BRANCH_NAME_IN_USE, branch.getName())
                 .assertUnchanged(branch.getRepository(), preUpdate.getRepository(), ErrorCode.REPOSITORY_FIXED)
-                .assertUnchanged(branch.getInitialBaseline(), preUpdate.getInitialBaseline(), ErrorCode.BRANCH_BASELINE_FIXED)
                 .validate();
     }
 }

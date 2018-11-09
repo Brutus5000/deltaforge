@@ -57,13 +57,11 @@ class BranchRepositoryIT {
                         ErrorCode.PROPERTY_IS_NULL.codeAsString(),
                         ErrorCode.PROPERTY_IS_NULL.codeAsString(),
                         ErrorCode.PROPERTY_IS_NULL.codeAsString(),
-                        ErrorCode.PROPERTY_IS_NULL.codeAsString(),
                         ErrorCode.PROPERTY_IS_NULL.codeAsString()
                 )))
                 .andExpect(jsonPath("$.errors[*].meta.args[*]", containsInAnyOrder(
                         "repository",
                         "name",
-                        "initialBaseline",
                         "currentBaseline",
                         "currentTag"
                 )));

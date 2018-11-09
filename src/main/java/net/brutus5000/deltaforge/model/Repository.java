@@ -1,5 +1,6 @@
 package net.brutus5000.deltaforge.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -11,6 +12,7 @@ import org.jgrapht.graph.DirectedWeightedPseudograph;
 
 import javax.persistence.*;
 import java.time.OffsetDateTime;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -36,17 +38,22 @@ public class Repository implements UniqueEntity {
     private String folderPath;
     @Column(unique = true)
     private String gitUrl;
+    @OneToOne
+    @JoinColumn
+    private Tag initialBaseline;
     @OneToMany(mappedBy = "repository")
-    private Set<Branch> branches;
+    private Set<Branch> branches = new HashSet<>();
     @OneToMany(mappedBy = "repository")
-    private Set<Tag> tags;
+    private Set<Tag> tags = new HashSet<>();
     @OneToMany(mappedBy = "repository")
-    private Set<Patch> patches;
+    private Set<Patch> patches = new HashSet<>();
 
     @Transient
+    @JsonIgnore
     private Graph<Tag, Patch> patchGraph;
 
     @PostLoad
+    @PostPersist
     public void initializePathGraph() {
         log.debug("Building graph for repository: {}", this);
 
