@@ -1,26 +1,39 @@
 package net.brutus5000.deltaforge.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.brutus5000.deltaforge.config.DeltaForgeProperties;
 import net.brutus5000.deltaforge.error.ApiException;
 import net.brutus5000.deltaforge.error.ErrorCode;
+import net.brutus5000.deltaforge.io.Zipper;
 import net.brutus5000.deltaforge.model.*;
+import net.brutus5000.deltaforge.patching.PatchMetadata;
 import net.brutus5000.deltaforge.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import java.io.BufferedOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.UUID;
+import java.util.zip.ZipOutputStream;
+
+import static java.nio.file.Files.newOutputStream;
 
 @Service
 @Slf4j
 public class FileService {
     private final static String TAGS_FOLDER = "tags";
+    private final static String PATCH_FOLDER = "patches";
+    private final static String PATCH_CONNECTOR = "__to__";
 
+    private final ObjectMapper objectMapper;
     private final DeltaForgeProperties properties;
     private final RepositoryRepository repositoryRepository;
     private final BranchRepository branchRepository;
@@ -28,7 +41,8 @@ public class FileService {
     private final TagAssignmentRepository tagAssignmentRepository;
     private final PatchTaskRepository patchTaskRepository;
 
-    public FileService(DeltaForgeProperties properties, RepositoryRepository repositoryRepository, BranchRepository branchRepository, TagRepository tagRepository, TagAssignmentRepository tagAssignmentRepository, PatchTaskRepository patchTaskRepository) {
+    public FileService(ObjectMapper objectMapper, DeltaForgeProperties properties, RepositoryRepository repositoryRepository, BranchRepository branchRepository, TagRepository tagRepository, TagAssignmentRepository tagAssignmentRepository, PatchTaskRepository patchTaskRepository) {
+        this.objectMapper = objectMapper;
         this.properties = properties;
         this.repositoryRepository = repositoryRepository;
         this.branchRepository = branchRepository;
@@ -120,5 +134,35 @@ public class FileService {
 
         log.debug("Creating patch task: {}", patchTask);
         patchTaskRepository.save(patchTask);
+    }
+
+    public Path buildBaselineTagPath(@NonNull Repository repository) {
+        return buildTagFolderPath(repository.getName(), repository.getInitialBaseline().getName());
+    }
+
+    public Path buildTagPath(@NonNull Tag tag) {
+        return buildTagFolderPath(tag.getRepository().getName(), tag.getName());
+    }
+
+    public Path buildPatchPath(@NonNull Patch patch, @NonNull String fileExtension) {
+        String repositoryName = patch.getRepository().getName();
+
+        return Paths.get(properties.getRootRepositoryPath(), repositoryName, PATCH_FOLDER, patch.getFrom().getName(),
+                PATCH_CONNECTOR, patch.getTo().getName(), "." + fileExtension);
+    }
+
+    @SneakyThrows
+    public void writeMetadata(@NonNull Patch patch, @NonNull PatchMetadata metadata) {
+        Files.writeString(buildPatchPath(patch, "json"), objectMapper.writeValueAsString(metadata), StandardOpenOption.CREATE_NEW);
+    }
+
+    public void zipPatchFolderContent(@NonNull Patch patch, Path patchDirectory) throws IOException {
+        Path patchPath = buildPatchPath(patch, "zip");
+
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(newOutputStream(patchPath)))) {
+            Zipper.contentOf(patchDirectory)
+                    .to(zipOutputStream)
+                    .zip();
+        }
     }
 }

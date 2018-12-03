@@ -8,12 +8,18 @@ import net.brutus5000.deltaforge.model.Patch;
 import net.brutus5000.deltaforge.model.PatchTask;
 import net.brutus5000.deltaforge.model.TaskStatus;
 import net.brutus5000.deltaforge.patching.Bsdiff4Service;
+import net.brutus5000.deltaforge.patching.CompareTaskV1;
+import net.brutus5000.deltaforge.patching.PatchMetadata;
 import net.brutus5000.deltaforge.repository.PatchRepository;
 import net.brutus5000.deltaforge.repository.PatchTaskRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 
 @Service
@@ -21,16 +27,18 @@ import java.util.Optional;
 public class PatchWorker {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final DeltaForgeProperties properties;
+    private final FileService fileService;
     private final PatchRepository patchRepository;
     private final PatchTaskRepository patchTaskRepository;
     private final Bsdiff4Service bsdiff4Service;
     private PatchTask current;
 
     public PatchWorker(ApplicationEventPublisher applicationEventPublisher, DeltaForgeProperties properties,
-                       PatchRepository patchRepository, PatchTaskRepository patchTaskRepository,
+                       FileService fileService, PatchRepository patchRepository, PatchTaskRepository patchTaskRepository,
                        Bsdiff4Service bsdiff4Service) {
         this.applicationEventPublisher = applicationEventPublisher;
         this.properties = properties;
+        this.fileService = fileService;
         this.patchRepository = patchRepository;
         this.patchTaskRepository = patchTaskRepository;
         this.bsdiff4Service = bsdiff4Service;
@@ -74,10 +82,23 @@ public class PatchWorker {
                 .setTo(patchTask.getTo())
                 .setFileSize(800L);
 
+        Path patchDirectory = null;
+
         try {
-            Thread.sleep(1000);
-            //CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, patchTask.getFrom().getRepository().ge)
-        } catch (InterruptedException ignored) {
+            patchDirectory = Files.createTempDirectory("deltaforge_");
+            CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, fileService.buildTagPath(patch.getFrom()), fileService.buildBaselineTagPath(patch.getRepository()), fileService.buildTagPath(patch.getTo()), patchDirectory);
+            PatchMetadata metadata = compareTask.compare();
+
+            fileService.writeMetadata(patch, metadata);
+            fileService.zipPatchFolderContent(patch, patchDirectory);
+        } catch (IOException ignored) {
+        } finally {
+            if (patchDirectory != null) {
+                try {
+                    FileSystemUtils.deleteRecursively(patchDirectory);
+                } catch (IOException ignored) {
+                }
+            }
         }
 
         log.info("Processing patch task finished: {}", patchTask);

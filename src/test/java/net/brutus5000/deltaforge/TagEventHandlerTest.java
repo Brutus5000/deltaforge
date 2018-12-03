@@ -77,7 +77,6 @@ class TagEventHandlerTest {
                 Tag tag = new Tag()
                         .setRepository(repository)
                         .setType(TagType.SOURCE)
-
                         .setName("");
 
                 ApiException exception = assertThrows(ApiException.class, () -> tagEventHandler.handleBeforeCreate(tag));

@@ -22,8 +22,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CompareTaskV1Test {
@@ -187,6 +186,8 @@ class CompareTaskV1Test {
                     patchItemWith(PatchCompressedItem.class, ARCHIVE_MODIFIED_FROM_SOURCE, PatchAction.COMPRESSED_FILE),
                     patchItemWith(PatchCompressedItem.class, ARCHIVE_MODIFIED_FROM_INITIAL, PatchAction.COMPRESSED_FILE)
             ));
+
+            verify(bsdiff4Service, times(2)).createPatch(any(), any(), any());
         }
 
         @Test
@@ -268,6 +269,9 @@ class CompareTaskV1Test {
                         patchItemWith(PatchDirectoryItem.class, DIRECTORY_ZIP, PatchAction.DELTA)
                 ))
         );
+
+        // 2 files bsdiff'ed on top level and 2 files inside DIRECTORY_ZIP
+        verify(bsdiff4Service, times(4)).createPatch(any(), any(), any());
     }
 
     private Matcher<PatchItem> patchItemWith(Class<? extends PatchItem> clazz, String name, PatchAction action) {
