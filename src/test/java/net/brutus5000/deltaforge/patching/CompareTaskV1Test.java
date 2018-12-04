@@ -1,5 +1,7 @@
 package net.brutus5000.deltaforge.patching;
 
+import net.brutus5000.deltaforge.model.Repository;
+import net.brutus5000.deltaforge.model.Tag;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
@@ -57,7 +59,10 @@ class CompareTaskV1Test {
                 bsdiff4Service, Paths.get(FILE_PREFIX + "testRepo/tags/source"),
                 Paths.get(FILE_PREFIX + "testRepo/tags/initialBaseline"),
                 Paths.get(FILE_PREFIX + "testRepo/tags/target"),
-                patchFolder
+                patchFolder,
+                new Repository().setName("testRepository"),
+                new Tag().setName("fromTag"),
+                new Tag().setName("toTag")
         );
 
         if (Files.isDirectory(patchFolder)) {

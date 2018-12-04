@@ -86,7 +86,9 @@ public class PatchWorker {
 
         try {
             patchDirectory = Files.createTempDirectory("deltaforge_");
-            CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, fileService.buildTagPath(patch.getFrom()), fileService.buildBaselineTagPath(patch.getRepository()), fileService.buildTagPath(patch.getTo()), patchDirectory);
+            CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, fileService.buildTagPath(patch.getFrom()),
+                    fileService.buildBaselineTagPath(patch.getRepository()), fileService.buildTagPath(patch.getTo()),
+                    patchDirectory, patchTask.getFrom().getRepository(), patchTask.getFrom(), patchTask.getTo());
             PatchMetadata metadata = compareTask.compare();
 
             fileService.writeMetadata(patch, metadata);

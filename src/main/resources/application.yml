@@ -3,6 +3,8 @@ spring:
     url: jdbc:postgresql://localhost:5432/deltaforge
     username: postgres
     password: banana
+  jackson:
+    default-property-inclusion: non_null
   jpa:
     generate-ddl: true
     hibernate:

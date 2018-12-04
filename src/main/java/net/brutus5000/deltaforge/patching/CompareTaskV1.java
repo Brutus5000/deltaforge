@@ -3,6 +3,8 @@ package net.brutus5000.deltaforge.patching;
 import com.google.common.hash.Hashing;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import net.brutus5000.deltaforge.model.Repository;
+import net.brutus5000.deltaforge.model.Tag;
 import org.springframework.util.FileSystemUtils;
 
 import java.io.IOException;
@@ -22,13 +24,20 @@ public class CompareTaskV1 {
     private final Path rootInitialBaselineFolder;
     private final Path rootTargetFolder;
     private final Path rootPatchFolder;
+    private final Repository repository;
+    private final Tag from;
+    private final Tag to;
 
-    public CompareTaskV1(Bsdiff4Service bsdiff4Service, Path sourceFolder, Path initialBaselineFolder, Path targetFolder, Path patchFolder) {
+    public CompareTaskV1(Bsdiff4Service bsdiff4Service, Path sourceFolder, Path initialBaselineFolder,
+                         Path targetFolder, Path patchFolder, Repository repository, Tag from, Tag to) {
         this.bsdiff4Service = bsdiff4Service;
         this.rootSourceFolder = sourceFolder;
         this.rootInitialBaselineFolder = initialBaselineFolder;
         this.rootTargetFolder = targetFolder;
         this.rootPatchFolder = patchFolder;
+        this.repository = repository;
+        this.from = from;
+        this.to = to;
     }
 
     public PatchMetadata compare() throws IOException {
@@ -36,6 +45,9 @@ public class CompareTaskV1 {
         PatchDirectoryItem root = compareDirectory(of);
 
         return new PatchMetadata()
+                .setRepository(repository.getName())
+                .setFromTag(from.getName())
+                .setToTag(to.getName())
                 .setProtocol(1)
                 .setItems(root.getItems());
     }
@@ -214,7 +226,8 @@ public class CompareTaskV1 {
         } else {
             ZipUtils.extractArchiveToFolder(sourceFolder, baselineTemp);
         }
-        CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, sourceTemp, baselineTemp, targetTemp, patchFolder);
+        CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, sourceTemp, baselineTemp, targetTemp, patchFolder,
+                repository, from, to);
         PatchMetadata patchMetadata = compareTask.compare();
         item.setItems(patchMetadata.getItems());
 
