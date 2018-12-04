@@ -147,17 +147,20 @@ public class FileService {
     public Path buildPatchPath(@NonNull Patch patch, @NonNull String fileExtension) {
         String repositoryName = patch.getRepository().getName();
 
-        return Paths.get(properties.getRootRepositoryPath(), repositoryName, PATCH_FOLDER, patch.getFrom().getName(),
-                PATCH_CONNECTOR, patch.getTo().getName(), "." + fileExtension);
+        return Paths.get(properties.getRootRepositoryPath(), repositoryName, PATCH_FOLDER,
+                patch.getFrom().getName() + PATCH_CONNECTOR + patch.getTo().getName() + "." + fileExtension);
     }
 
     @SneakyThrows
     public void writeMetadata(@NonNull Patch patch, @NonNull PatchMetadata metadata) {
-        Files.writeString(buildPatchPath(patch, "json"), objectMapper.writeValueAsString(metadata), StandardOpenOption.CREATE_NEW);
+        Path jsonPath = buildPatchPath(patch, "json");
+        Files.createDirectories(jsonPath.getParent());
+        Files.writeString(jsonPath, objectMapper.writeValueAsString(metadata), StandardOpenOption.CREATE_NEW);
     }
 
     public void zipPatchFolderContent(@NonNull Patch patch, Path patchDirectory) throws IOException {
         Path patchPath = buildPatchPath(patch, "zip");
+        Files.createDirectories(patchPath.getParent());
 
         try (ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(newOutputStream(patchPath)))) {
             Zipper.contentOf(patchDirectory)

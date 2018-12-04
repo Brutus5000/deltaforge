@@ -91,7 +91,8 @@ public class PatchWorker {
 
             fileService.writeMetadata(patch, metadata);
             fileService.zipPatchFolderContent(patch, patchDirectory);
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            log.warn("Processing PatchTask failed: {]", patchTask, e);
         } finally {
             if (patchDirectory != null) {
                 try {

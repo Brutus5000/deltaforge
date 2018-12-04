@@ -69,7 +69,7 @@ public class CompareTaskV1 {
                     item.setAction(PatchAction.UNCHANGED);
                 } else {
                     item.setAction(PatchAction.BSDIFF_FROM_INITIAL_BASELINE);
-                    bsdiff4Service.createPatch(sourceFile, initialBaselineFile, patchFile);
+                    bsdiff4Service.createPatch(initialBaselineFile, targetFile, patchFile);
                 }
             } else {
                 item.setAction(PatchAction.ADD);
@@ -101,10 +101,14 @@ public class CompareTaskV1 {
         if (Files.isDirectory(targetFolder)) {
             scanDirectory(targetFolder, subDirectories, files);
 
-            if (Files.isDirectory(sourceFolder) || Files.isDirectory(initialBaselineFolder)) {
+            if (Files.isDirectory(sourceFolder)) {
                 patchAction = PatchAction.DELTA;
                 Files.createDirectories(patchFolder);
                 scanDirectory(sourceFolder, subDirectories, files);
+            } else if (Files.isDirectory(initialBaselineFolder)) {
+                patchAction = PatchAction.DELTA;
+                Files.createDirectories(patchFolder);
+                scanDirectory(initialBaselineFolder, subDirectories, files);
             } else {
                 patchAction = PatchAction.ADD;
             }
