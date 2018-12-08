@@ -174,7 +174,8 @@ public class CompareTaskV1 {
         String contentType = Files.probeContentType(rootTargetFolder.resolve(relativeFilePath));
         log.debug("Detected content type: " + contentType);
 
-        return Objects.equals(contentType, "application/x-zip-compressed");
+        return Objects.equals(contentType, "application/x-zip-compressed") // Windows
+                || Objects.equals(contentType, "application/zip");
     }
 
     public PatchCompressedItem compareZipFile(@NonNull Path relativeFilePath) throws IOException {
