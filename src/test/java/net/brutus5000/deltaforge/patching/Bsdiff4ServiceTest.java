@@ -23,6 +23,7 @@ class Bsdiff4ServiceTest {
         Path patch = Paths.get(FILE_PREFIX + "testRepo/temp/modified-from-source.txt");
 
         try {
+            Files.createDirectories(patch.getParent());
             instance.createPatch(source, target, patch);
         } finally {
             Files.deleteIfExists(patch);
