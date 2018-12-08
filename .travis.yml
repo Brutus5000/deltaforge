@@ -3,5 +3,8 @@ language: java
 jdk:
   - openjdk11
 
+install:
+  - chmod +x gradlew
+
 script:
-  - chmod +x gradlew && ./gradlew build --info
+  - ./gradlew build --info
