@@ -4,4 +4,4 @@ jdk:
   - openjdk11
 
 script:
-  - ./gradlew build --info
+  - chmod +x gradlew && ./gradlew build --info
