@@ -1,0 +1,23 @@
+group = 'net.brutus5000'
+version = '0.0.1-SNAPSHOT'
+description = 'deltaforge-server'
+sourceCompatibility = '11'
+
+dependencies {
+    // Spring Boot managed dependencies:
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+    compile "org.springframework.boot:spring-boot-starter-data-rest"
+    compile "org.springframework.boot:spring-boot-starter-data-jpa"
+    runtime "org.postgresql:postgresql"
+    testCompile "org.springframework.boot:spring-boot-starter-test"
+    testCompile "com.h2database:h2"
+
+    // Standalone dependencies:
+    implementation project(":deltaforge-patching")
+    compile "com.google.guava:guava:${guavaVersion}"
+    compile "com.github.brutus5000:jbsdiff:${jbsdiffVersion}"
+    compile "org.apache.commons:commons-compress:${apacheCommonsCompressVersion}"
+    compile "org.jgrapht:jgrapht-core:${jgraphtVersion}"
+    compile "org.jgrapht:jgrapht-io:${jgraphtVersion}"
+    compile "org.jgrapht:jgrapht-guava:${jgraphtVersion}"
+}
