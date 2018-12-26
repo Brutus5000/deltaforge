@@ -26,6 +26,7 @@ public final class Zipper {
     private long bytesTotal;
     private long bytesDone;
     private ZipOutputStream zipOutputStream;
+    private boolean closeStream;
     private long lastCountUpdate;
     private byte[] buffer;
 
@@ -51,6 +52,13 @@ public final class Zipper {
 
     public Zipper to(ZipOutputStream zipOutputStream) {
         this.zipOutputStream = zipOutputStream;
+        this.closeStream = false;
+        return this;
+    }
+
+    public Zipper to(Path path) throws IOException {
+        this.zipOutputStream = new ZipOutputStream(Files.newOutputStream(path));
+        this.closeStream = true;
         return this;
     }
 
@@ -103,6 +111,10 @@ public final class Zipper {
                 return FileVisitResult.CONTINUE;
             }
         });
+
+        if (closeStream) {
+            zipOutputStream.close();
+        }
     }
 
     private long calculateTotalBytes() throws IOException {

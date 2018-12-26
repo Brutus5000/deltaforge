@@ -1,44 +1,42 @@
 package net.brutus5000.deltaforge.patching;
 
-import com.google.common.hash.Hashing;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import net.brutus5000.deltaforge.patching.io.Unzipper;
+import net.brutus5000.deltaforge.patching.io.Bsdiff4Service;
+import net.brutus5000.deltaforge.patching.io.IoService;
 import net.brutus5000.deltaforge.patching.meta.*;
-import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class CompareTaskV1 {
     private final Bsdiff4Service bsdiff4Service;
+    private final IoService ioService;
     private final Path rootSourceFolder;
     private final Path rootInitialBaselineFolder;
     private final Path rootTargetFolder;
     private final Path rootPatchFolder;
-    private final String repository;
-    private final String fromTag;
-    private final String toTag;
+    private final String repositoryName;
+    private final String fromTagName;
+    private final String toTagName;
 
-    public CompareTaskV1(Bsdiff4Service bsdiff4Service, Path sourceFolder, Path initialBaselineFolder,
+    public CompareTaskV1(Bsdiff4Service bsdiff4Service, IoService ioService, Path sourceFolder, Path initialBaselineFolder,
                          Path targetFolder, Path patchFolder, String repositoryName, String fromTagName,
                          String toTagName) {
         this.bsdiff4Service = bsdiff4Service;
+        this.ioService = ioService;
         this.rootSourceFolder = sourceFolder;
         this.rootInitialBaselineFolder = initialBaselineFolder;
         this.rootTargetFolder = targetFolder;
         this.rootPatchFolder = patchFolder;
-        this.repository = repositoryName;
-        this.fromTag = fromTagName;
-        this.toTag = toTagName;
+        this.repositoryName = repositoryName;
+        this.fromTagName = fromTagName;
+        this.toTagName = toTagName;
     }
 
     public PatchMetadata compare() throws IOException {
@@ -46,14 +44,14 @@ public class CompareTaskV1 {
         PatchDirectoryItem root = compareDirectory(of);
 
         return new PatchMetadata()
-                .setRepository(repository)
-                .setFromTag(fromTag)
-                .setToTag(toTag)
+                .setRepository(repositoryName)
+                .setFromTag(fromTagName)
+                .setToTag(toTagName)
                 .setProtocol(1)
                 .setItems(root.getItems());
     }
 
-    public PatchFileItem compareFile(@NonNull Path relativeFilePath) throws IOException {
+    PatchFileItem compareFile(@NonNull Path relativeFilePath) throws IOException {
         final Path sourceFile = rootSourceFolder.resolve(relativeFilePath);
         final Path targetFile = rootTargetFolder.resolve(relativeFilePath);
         final Path initialBaselineFile = rootInitialBaselineFolder.resolve(relativeFilePath);
@@ -63,11 +61,11 @@ public class CompareTaskV1 {
                 .setName(relativeFilePath.getFileName().toString());
 
         // if target folder already exists it's either new or delta
-        if (Files.isRegularFile(targetFile)) {
-            item.setTargetCrc(crc32(targetFile));
+        if (ioService.isFile(targetFile)) {
+            item.setTargetCrc(ioService.crc32(targetFile));
 
-            if (Files.isRegularFile(sourceFile)) {
-                item.setBaseCrc(crc32(sourceFile));
+            if (ioService.isFile(sourceFile)) {
+                item.setBaseCrc(ioService.crc32(sourceFile));
 
                 if (Objects.equals(item.getBaseCrc(), item.getTargetCrc())) {
                     item.setAction(PatchAction.UNCHANGED);
@@ -75,8 +73,8 @@ public class CompareTaskV1 {
                     item.setAction(PatchAction.BSDIFF);
                     bsdiff4Service.createPatch(sourceFile, targetFile, patchFile);
                 }
-            } else if (Files.isRegularFile(initialBaselineFile)) {
-                item.setBaseCrc(crc32(initialBaselineFile));
+            } else if (ioService.isFile(initialBaselineFile)) {
+                item.setBaseCrc(ioService.crc32(initialBaselineFile));
 
                 if (Objects.equals(item.getBaseCrc(), item.getTargetCrc())) {
                     item.setAction(PatchAction.UNCHANGED);
@@ -94,11 +92,7 @@ public class CompareTaskV1 {
         return item;
     }
 
-    private String crc32(@NonNull Path filePath) throws IOException {
-        return "0x" + Integer.toHexString(com.google.common.io.Files.asByteSource(filePath.toFile()).hash(Hashing.crc32()).asInt());
-    }
-
-    public PatchDirectoryItem compareDirectory(@NonNull Path relativeFolderPath) throws IOException {
+    PatchDirectoryItem compareDirectory(@NonNull Path relativeFolderPath) throws IOException {
         log.debug("compareDirectory for `{}`", relativeFolderPath);
 
         final Path sourceFolder = rootSourceFolder.resolve(relativeFolderPath);
@@ -111,16 +105,16 @@ public class CompareTaskV1 {
         Set<Path> files = new HashSet<>();
 
         // if target folder already exists it's either new or delta
-        if (Files.isDirectory(targetFolder)) {
+        if (ioService.isDirectory(targetFolder)) {
             scanDirectory(targetFolder, subDirectories, files);
 
-            if (Files.isDirectory(sourceFolder)) {
+            if (ioService.isDirectory(sourceFolder)) {
                 patchAction = PatchAction.DELTA;
-                Files.createDirectories(patchFolder);
+                ioService.createDirectories(patchFolder);
                 scanDirectory(sourceFolder, subDirectories, files);
-            } else if (Files.isDirectory(initialBaselineFolder)) {
+            } else if (ioService.isDirectory(initialBaselineFolder)) {
                 patchAction = PatchAction.DELTA;
-                Files.createDirectories(patchFolder);
+                ioService.createDirectories(patchFolder);
                 scanDirectory(initialBaselineFolder, subDirectories, files);
             } else {
                 patchAction = PatchAction.ADD;
@@ -141,7 +135,7 @@ public class CompareTaskV1 {
 
         for (Path file : files) {
             PatchItem fileItem;
-            if (isZipFile(file)) {
+            if (ioService.isZipFile(file)) {
                 fileItem = compareZipFile(relativeFolderPath.resolve(file));
             } else {
                 fileItem = compareFile(relativeFolderPath.resolve(file));
@@ -153,33 +147,22 @@ public class CompareTaskV1 {
     }
 
     private void scanDirectory(@NonNull Path directory, @NonNull Set<Path> subDirectories, @NonNull Set<Path> files) throws IOException {
-        List<Path> folderElements = Files.list(directory)
-                .collect(Collectors.toList());
-
-        for (Path path : folderElements) {
+        for (Path path : ioService.getDirectoryItems(directory)) {
             scanDirectoryElement(path, subDirectories, files);
         }
     }
 
     private void scanDirectoryElement(@NonNull Path folderElement, @NonNull Set<Path> directories, @NonNull Set<Path> files) throws IOException {
-        if (Files.isDirectory(folderElement)) {
+        if (ioService.isDirectory(folderElement)) {
             directories.add(folderElement.getFileName());
-        } else if (Files.isRegularFile(folderElement)) {
+        } else if (ioService.isFile(folderElement)) {
             files.add(folderElement.getFileName());
         } else {
             throw new IOException(String.format("Given folderElement is neither directory nor file: %s", folderElement.toString()));
         }
     }
 
-    public boolean isZipFile(@NonNull Path relativeFilePath) throws IOException {
-        String contentType = Files.probeContentType(rootTargetFolder.resolve(relativeFilePath));
-        log.debug("Detected content type: " + contentType);
-
-        return Objects.equals(contentType, "application/x-zip-compressed") // Windows
-                || Objects.equals(contentType, "application/zip");
-    }
-
-    public PatchCompressedItem compareZipFile(@NonNull Path relativeFilePath) throws IOException {
+    PatchCompressedItem compareZipFile(@NonNull Path relativeFilePath) throws IOException {
         final Path sourceFolder = rootSourceFolder.resolve(relativeFilePath);
         final Path targetFolder = rootTargetFolder.resolve(relativeFilePath);
         final Path initialBaselineFolder = rootInitialBaselineFolder.resolve(relativeFilePath);
@@ -191,16 +174,16 @@ public class CompareTaskV1 {
                 .setAlgorithm("zip");
 
         // if target folder already exists it's either new or delta
-        if (Files.isRegularFile(targetFolder)) {
+        if (ioService.isFile(targetFolder)) {
 
-            if (Files.isRegularFile(sourceFolder)) {
-                if (Objects.equals(crc32(sourceFolder), crc32(targetFolder))) {
+            if (ioService.isFile(sourceFolder)) {
+                if (Objects.equals(ioService.crc32(sourceFolder), ioService.crc32(targetFolder))) {
                     item.setAction(PatchAction.UNCHANGED);
                 } else {
                     internalCompareArchive(sourceFolder, targetFolder, patchFolder, item, true);
                 }
-            } else if (Files.isRegularFile(initialBaselineFolder)) {
-                if (Objects.equals(crc32(initialBaselineFolder), crc32(targetFolder))) {
+            } else if (ioService.isFile(initialBaselineFolder)) {
+                if (Objects.equals(ioService.crc32(initialBaselineFolder), ioService.crc32(targetFolder))) {
                     item.setAction(PatchAction.UNCHANGED);
                 } else {
                     internalCompareArchive(initialBaselineFolder, targetFolder, patchFolder, item, false);
@@ -215,28 +198,134 @@ public class CompareTaskV1 {
         return item;
     }
 
-    private void internalCompareArchive(Path sourceArchive, Path targetArchive, Path patchFolder, PatchCompressedItem item, boolean fromSource) throws IOException {
+    private void internalCompareArchive(@NonNull Path sourceArchive, @NonNull Path targetArchive, @NonNull Path patchFolder, @NonNull PatchCompressedItem item, boolean fromSource) throws IOException {
         item.setAction(PatchAction.COMPRESSED_FILE);
 
-        Path targetTemp = Files.createTempDirectory("deltaforge_target_");
-        Path sourceTemp = Files.createTempDirectory("deltaforge_source_");
-        Path baselineTemp = Files.createTempDirectory("deltaforge_baseline_");
+        Path targetTemp = ioService.createTempDirectory("deltaforge_target_");
+        Path sourceTemp = ioService.createTempDirectory("deltaforge_source_");
+        Path baselineTemp = ioService.createTempDirectory("deltaforge_baseline_");
 
-        Unzipper.from(targetArchive).to(targetTemp).unzip();
+        ioService.unzip(targetArchive, targetTemp);
         if (fromSource) {
-            Unzipper.from(sourceArchive).to(sourceTemp).unzip();
+            ioService.unzip(sourceArchive, sourceTemp);
         } else {
-            Unzipper.from(sourceArchive).to(baselineTemp).unzip();
+            ioService.unzip(sourceArchive, baselineTemp);
         }
-        CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, sourceTemp, baselineTemp, targetTemp, patchFolder,
-                repository, fromTag, toTag);
+
+        CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, ioService, sourceTemp, baselineTemp, targetTemp, patchFolder,
+                repositoryName, fromTagName, toTagName);
         PatchMetadata patchMetadata = compareTask.compare();
         item.setItems(patchMetadata.getItems());
 
-        FileUtils.deleteQuietly(sourceTemp.toFile());
-        FileUtils.deleteQuietly(targetTemp.toFile());
-        FileUtils.deleteQuietly(baselineTemp.toFile());
+        ioService.deleteQuietly(sourceTemp);
+        ioService.deleteQuietly(targetTemp);
+        ioService.deleteQuietly(baselineTemp);
     }
 
+    public void apply(@NonNull PatchMetadata patchMetadata) throws IOException {
+        applyItems(patchMetadata.getItems(), Paths.get("."));
+    }
 
+    void applyItems(@NonNull Set<PatchItem> items, @NonNull Path relativeFolderPath) throws IOException {
+
+        for (PatchItem item : items) {
+            if (item instanceof PatchFileItem) {
+                applyFile((PatchFileItem) item, relativeFolderPath);
+            } else if (item instanceof PatchDirectoryItem) {
+                applyDirectory((PatchDirectoryItem) item, relativeFolderPath);
+            } else if (item instanceof PatchCompressedItem) {
+                applyZipFile((PatchCompressedItem) item, relativeFolderPath);
+            }
+        }
+    }
+
+    private void verifyCrc(@NonNull Path filePath, String expectedCrc) throws IOException {
+        String actualCrc = ioService.crc32(filePath);
+
+        if (!Objects.equals(actualCrc, expectedCrc)) {
+            throw new CrcMismatchException(filePath, expectedCrc, actualCrc);
+        }
+    }
+
+    void applyFile(@NonNull PatchFileItem fileItem, @NonNull Path relativeFolderPath) throws IOException {
+        log.debug("apply PatchFileItem {} in relative path {}", fileItem);
+
+        final Path sourceFile = rootSourceFolder.resolve(relativeFolderPath).resolve(fileItem.getName());
+        final Path targetFile = rootTargetFolder.resolve(relativeFolderPath).resolve(fileItem.getName());
+        final Path initialBaselineFile = rootInitialBaselineFolder.resolve(relativeFolderPath).resolve(fileItem.getName());
+        final Path patchFile = rootPatchFolder.resolve(relativeFolderPath).resolve(fileItem.getName());
+
+        switch (fileItem.getAction()) {
+            case UNCHANGED:
+                verifyCrc(sourceFile, fileItem.getBaseCrc());
+                break;
+            case ADD:
+                ioService.copy(patchFile, targetFile);
+                verifyCrc(targetFile, fileItem.getTargetCrc());
+                break;
+            case REMOVE:
+                ioService.deleteQuietly(targetFile);
+                break;
+            case BSDIFF:
+                verifyCrc(sourceFile, fileItem.getBaseCrc());
+                bsdiff4Service.applyPatch(sourceFile, targetFile, patchFile);
+                verifyCrc(targetFile, fileItem.getTargetCrc());
+                break;
+            case BSDIFF_FROM_INITIAL_BASELINE:
+                verifyCrc(initialBaselineFile, fileItem.getBaseCrc());
+                bsdiff4Service.applyPatch(initialBaselineFile, targetFile, patchFile);
+                verifyCrc(targetFile, fileItem.getTargetCrc());
+                break;
+            default:
+                throw new IllegalStateException("Action type is undefined for applying files: " + fileItem.getAction());
+        }
+    }
+
+    void applyDirectory(@NonNull PatchDirectoryItem directoryItem, @NonNull Path relativeFolderPath) throws IOException {
+        log.debug("apply PatchDirectoryItem {} in relative path {}", directoryItem);
+
+        final Path targetFolder = rootTargetFolder.resolve(relativeFolderPath).resolve(directoryItem.getName());
+        final Path patchFolder = rootPatchFolder.resolve(relativeFolderPath).resolve(directoryItem.getName());
+
+        switch (directoryItem.getAction()) {
+            case ADD:
+                ioService.copyDirectory(patchFolder, targetFolder);
+                break;
+            case REMOVE:
+                // do nothing - the folder will not be copied to the target path
+                break;
+            case DELTA:
+                applyItems(directoryItem.getItems(), relativeFolderPath.resolve(directoryItem.getName()));
+                break;
+            default:
+                throw new IllegalStateException("Action type is undefined for applying directories: " + directoryItem.getAction());
+        }
+    }
+
+    void applyZipFile(@NonNull PatchCompressedItem compressedItem, @NonNull Path relativeFolderPath) throws IOException {
+        log.debug("apply PatchCompressedItem {} in relative path {}", compressedItem);
+
+        final Path tempRootDirectory = ioService.createTempDirectory("deltaforge_zip_root_");
+        final Path sourceFolder = ioService.createDirectories(tempRootDirectory.resolve("source"));
+        final Path targetFolder = ioService.createDirectories(tempRootDirectory.resolve("target"));
+        final Path initialBaselineFolder = ioService.createDirectories(tempRootDirectory.resolve("initialBaseline"));
+        final Path patchFolder = ioService.createDirectories(tempRootDirectory.resolve("patch"));
+
+        ioService.unzip(rootSourceFolder.resolve(relativeFolderPath).resolve(compressedItem.getName()), sourceFolder);
+        ioService.unzip(rootTargetFolder.resolve(relativeFolderPath).resolve(compressedItem.getName()), targetFolder);
+        ioService.unzip(rootPatchFolder.resolve(relativeFolderPath).resolve(compressedItem.getName()), patchFolder);
+
+        if (compressedItem.requiresInitialBaseline()) {
+            ioService.unzip(rootInitialBaselineFolder.resolve(relativeFolderPath).resolve(compressedItem.getName()), initialBaselineFolder);
+        }
+
+        CompareTaskV1 zipCompareTask = new CompareTaskV1(bsdiff4Service, ioService, sourceFolder, initialBaselineFolder, targetFolder, patchFolder,
+                repositoryName, fromTagName, toTagName);
+
+        zipCompareTask.applyItems(compressedItem.getItems(), Paths.get("."));
+
+        ioService.zip(targetFolder, rootTargetFolder.resolve(relativeFolderPath).resolve(compressedItem.getName()));
+
+        ioService.deleteDirectory(tempRootDirectory);
+    }
 }

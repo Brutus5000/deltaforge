@@ -7,8 +7,9 @@ import net.brutus5000.deltaforge.events.PatchCreatedEvent;
 import net.brutus5000.deltaforge.model.Patch;
 import net.brutus5000.deltaforge.model.PatchTask;
 import net.brutus5000.deltaforge.model.TaskStatus;
-import net.brutus5000.deltaforge.patching.Bsdiff4Service;
 import net.brutus5000.deltaforge.patching.CompareTaskV1;
+import net.brutus5000.deltaforge.patching.io.Bsdiff4Service;
+import net.brutus5000.deltaforge.patching.io.IoService;
 import net.brutus5000.deltaforge.patching.meta.PatchMetadata;
 import net.brutus5000.deltaforge.repository.PatchRepository;
 import net.brutus5000.deltaforge.repository.PatchTaskRepository;
@@ -31,17 +32,19 @@ public class PatchWorker {
     private final PatchRepository patchRepository;
     private final PatchTaskRepository patchTaskRepository;
     private final Bsdiff4Service bsdiff4Service;
+    private final IoService ioService;
     private PatchTask current;
 
     public PatchWorker(ApplicationEventPublisher applicationEventPublisher, DeltaforgeServerProperties properties,
                        FileService fileService, PatchRepository patchRepository, PatchTaskRepository patchTaskRepository,
-                       Bsdiff4Service bsdiff4Service) {
+                       Bsdiff4Service bsdiff4Service, IoService ioService) {
         this.applicationEventPublisher = applicationEventPublisher;
         this.properties = properties;
         this.fileService = fileService;
         this.patchRepository = patchRepository;
         this.patchTaskRepository = patchTaskRepository;
         this.bsdiff4Service = bsdiff4Service;
+        this.ioService = ioService;
     }
 
     @Scheduled(fixedDelay = 1000)
@@ -86,7 +89,7 @@ public class PatchWorker {
 
         try {
             patchDirectory = Files.createTempDirectory("deltaforge_");
-            CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, fileService.buildTagPath(patch.getFrom()),
+            CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, ioService, fileService.buildTagPath(patch.getFrom()),
                     fileService.buildBaselineTagPath(patch.getRepository()), fileService.buildTagPath(patch.getTo()),
                     patchDirectory, patchTask.getFrom().getRepository().getName(), patchTask.getFrom().getName(),
                     patchTask.getTo().getName());

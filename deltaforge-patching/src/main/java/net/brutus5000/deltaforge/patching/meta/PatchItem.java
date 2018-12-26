@@ -13,4 +13,6 @@ public interface PatchItem {
     String getName();
 
     PatchAction getAction();
+
+    boolean requiresInitialBaseline();
 }

@@ -1,6 +1,13 @@
 package net.brutus5000.deltaforge.patching;
 
-import net.brutus5000.deltaforge.patching.meta.*;
+import com.google.common.collect.Sets;
+import net.brutus5000.deltaforge.patching.io.Bsdiff4Service;
+import net.brutus5000.deltaforge.patching.io.IoService;
+import net.brutus5000.deltaforge.patching.meta.PatchAction;
+import net.brutus5000.deltaforge.patching.meta.PatchDirectoryItem;
+import net.brutus5000.deltaforge.patching.meta.PatchFileItem;
+import net.brutus5000.deltaforge.patching.meta.PatchItem;
+import org.apache.commons.io.FileUtils;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
@@ -11,18 +18,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
 import java.util.Objects;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,239 +46,226 @@ class CompareTaskV1Test {
     private final static String ARCHIVE_MODIFIED_FROM_INITIAL = "modified-from-initial.zip";
     private final static String FOLDER_ZIP = "zip";
 
+    private static final Path SELF_PATH = Paths.get(".");
+    private static final String FILE_PREFIX = "./src/test/resources/";
+    private static final String PATCH_NAME = "source_to_target";
+
     @Mock
     private Bsdiff4Service bsdiff4Service;
+    private final Path rootSourceFolder;
+    private final Path rootInitialBaselineFolder;
+    private final Path rootTargetFolder;
+    private final Path rootPatchFolder;
+    @Mock
+    private IoService ioService;
+    private CompareTaskV1 instance;
 
-    CompareTaskV1 instance;
-
+    {
+        rootPatchFolder = Paths.get(FILE_PREFIX + "testRepo/temp/patching/" + PATCH_NAME);
+        rootSourceFolder = Paths.get(FILE_PREFIX + "testRepo/tags/source");
+        rootInitialBaselineFolder = Paths.get(FILE_PREFIX + "testRepo/tags/initialBaseline");
+        rootTargetFolder = Paths.get(FILE_PREFIX + "testRepo/tags/target");
+    }
 
     @BeforeEach
     void beforeEach() throws Exception {
-        String FILE_PREFIX = "./src/test/resources/";
-        String PATCH_NAME = "source_to_target";
-        Path patchFolder = Paths.get(FILE_PREFIX + "testRepo/temp/patching/" + PATCH_NAME);
+
         instance = new CompareTaskV1(
-                bsdiff4Service, Paths.get(FILE_PREFIX + "testRepo/tags/source"),
-                Paths.get(FILE_PREFIX + "testRepo/tags/initialBaseline"),
-                Paths.get(FILE_PREFIX + "testRepo/tags/target"),
-                patchFolder,
+                bsdiff4Service, ioService, rootSourceFolder,
+                rootInitialBaselineFolder,
+                rootTargetFolder,
+                rootPatchFolder,
                 "testRepository",
                 "fromTag",
                 "toTag"
         );
 
-        if (Files.isDirectory(patchFolder)) {
-            Files.walk(patchFolder)
-                    .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(File::delete);
+        if (Files.isDirectory(rootPatchFolder)) {
+            FileUtils.deleteQuietly(rootPatchFolder.toFile());
         }
     }
 
     @Nested
-    class FileComparison {
-        @Test
-        void compareFileUnchanged() throws Exception {
-            PatchFileItem fileItem = instance.compareFile(Paths.get(FILENAME_UNCHANGED));
+    class ApplyFile {
+        private static final String FILE_NAME = "someFile";
+        private final Path sourceFile;
+        private final Path targetFile;
+        private final Path patchFile;
+        private final Path initialBaselineFile;
+        private PatchFileItem patchItem;
 
-            assertAll("fileItem",
-                    () -> assertEquals(FILENAME_UNCHANGED, fileItem.getName()),
-                    () -> assertEquals(PatchAction.UNCHANGED, fileItem.getAction()),
-                    () -> assertEquals("0xb6651dae", fileItem.getBaseCrc()),
-                    () -> assertEquals("0xb6651dae", fileItem.getTargetCrc())
-            );
+        {
+            sourceFile = rootSourceFolder.resolve(SELF_PATH).resolve(FILE_NAME);
+            targetFile = rootTargetFolder.resolve(SELF_PATH).resolve(FILE_NAME);
+            patchFile = rootPatchFolder.resolve(SELF_PATH).resolve(FILE_NAME);
+            initialBaselineFile = rootInitialBaselineFolder.resolve(SELF_PATH).resolve(FILE_NAME);
+        }
+
+        @BeforeEach
+        void beforeEach() {
+            patchItem = new PatchFileItem()
+                    .setName(FILE_NAME);
         }
 
         @Test
-        void compareFileNew() throws Exception {
-            PatchFileItem fileItem = instance.compareFile(Paths.get(FILENAME_NEW));
+        void testUnchanged() throws Exception {
+            patchItem.setAction(PatchAction.UNCHANGED);
 
-            assertAll("fileItem",
-                    () -> assertEquals(FILENAME_NEW, fileItem.getName()),
-                    () -> assertEquals(PatchAction.ADD, fileItem.getAction()),
-                    () -> assertNull(fileItem.getBaseCrc()),
-                    () -> assertEquals("0xfe444d37", fileItem.getTargetCrc())
-            );
+            instance.applyFile(patchItem, SELF_PATH);
+            verify(ioService).crc32(sourceFile);
+            verifyNoMoreInteractions(ioService);
+            verifyZeroInteractions(bsdiff4Service);
         }
 
         @Test
-        void compareFileRemovedFromSource() throws Exception {
-            PatchFileItem fileItem = instance.compareFile(Paths.get(FILENAME_REMOVED_FROM_SOURCE));
+        void testAdded() throws Exception {
+            patchItem.setAction(PatchAction.ADD);
 
-            assertAll("fileItem",
-                    () -> assertEquals(FILENAME_REMOVED_FROM_SOURCE, fileItem.getName()),
-                    () -> assertEquals(PatchAction.REMOVE, fileItem.getAction()),
-                    () -> assertNull(fileItem.getBaseCrc()),
-                    () -> assertNull(fileItem.getTargetCrc())
-            );
+            instance.applyFile(patchItem, SELF_PATH);
+            verify(ioService).copy(patchFile, targetFile);
+            verify(ioService).crc32(targetFile);
+            verifyNoMoreInteractions(ioService);
+            verifyZeroInteractions(bsdiff4Service);
         }
 
         @Test
-        void compareFileModifiedFromSource() throws Exception {
-            PatchFileItem fileItem = instance.compareFile(Paths.get(FILENAME_MODIFIED_FROM_SOURCE));
+        void testRemoved() throws Exception {
+            patchItem.setAction(PatchAction.REMOVE);
 
-            assertAll("fileItem",
-                    () -> assertEquals(FILENAME_MODIFIED_FROM_SOURCE, fileItem.getName()),
-                    () -> assertEquals(PatchAction.BSDIFF, fileItem.getAction()),
-                    () -> assertEquals("0x5c428a3d", fileItem.getBaseCrc()),
-                    () -> assertEquals("0x2b7fbb9d", fileItem.getTargetCrc())
-            );
-
-            verify(bsdiff4Service).createPatch(
-                    argThat(path -> path.toString().endsWith(FILENAME_MODIFIED_FROM_SOURCE)),
-                    argThat(path -> path.toString().endsWith(FILENAME_MODIFIED_FROM_SOURCE)),
-                    argThat(path -> path.toString().endsWith(FILENAME_MODIFIED_FROM_SOURCE))
-            );
+            instance.applyFile(patchItem, SELF_PATH);
+            verify(ioService).deleteQuietly(targetFile);
+            verifyNoMoreInteractions(ioService);
+            verifyZeroInteractions(bsdiff4Service);
         }
 
         @Test
-        void compareFileModifiedFromInitial() throws Exception {
-            PatchFileItem fileItem = instance.compareFile(Paths.get(FILENAME_MODIFIED_FROM_INITIAL));
+        void testBsdiff() throws Exception {
+            patchItem.setAction(PatchAction.BSDIFF);
 
-            assertAll("fileItem",
-                    () -> assertEquals(FILENAME_MODIFIED_FROM_INITIAL, fileItem.getName()),
-                    () -> assertEquals(PatchAction.BSDIFF_FROM_INITIAL_BASELINE, fileItem.getAction()),
-                    () -> assertEquals("0xffc5f2e9", fileItem.getBaseCrc()),
-                    () -> assertEquals("0x6fe9f2d6", fileItem.getTargetCrc())
-            );
+            instance.applyFile(patchItem, SELF_PATH);
 
-            verify(bsdiff4Service).createPatch(
-                    argThat(path -> path.toString().endsWith(FILENAME_MODIFIED_FROM_INITIAL)),
-                    argThat(path -> path.toString().endsWith(FILENAME_MODIFIED_FROM_INITIAL)),
-                    argThat(path -> path.toString().endsWith(FILENAME_MODIFIED_FROM_INITIAL))
-            );
+            verify(ioService).crc32(sourceFile);
+            verify(ioService).crc32(targetFile);
+            verifyNoMoreInteractions(ioService);
+
+            verify(bsdiff4Service).applyPatch(sourceFile, targetFile, patchFile);
+            verifyNoMoreInteractions(bsdiff4Service);
         }
 
         @Test
-        void isCompressed() throws Exception {
-            String FILE_PREFIX = "./src/test/resources/testArchiveFiles";
+        void testBsdiffBaseline() throws Exception {
+            patchItem.setAction(PatchAction.BSDIFF_FROM_INITIAL_BASELINE);
 
-            assertAll("content types",
-                    () -> assertTrue(instance.isZipFile(Paths.get(FILE_PREFIX, "archive.zip"))),
-                    () -> assertFalse(instance.isZipFile(Paths.get(FILE_PREFIX, "archive.7z")))
+            instance.applyFile(patchItem, SELF_PATH);
+
+            verify(ioService).crc32(initialBaselineFile);
+            verify(ioService).crc32(targetFile);
+            verifyNoMoreInteractions(ioService);
+
+            verify(bsdiff4Service).applyPatch(initialBaselineFile, targetFile, patchFile);
+            verifyNoMoreInteractions(bsdiff4Service);
+        }
+
+        @Test
+        void testCrcMismatch() throws Exception {
+            patchItem.setAction(PatchAction.ADD);
+            patchItem.setBaseCrc("correctValue");
+            when(ioService.crc32(any())).thenReturn("wrongValue");
+
+            assertThrows(CrcMismatchException.class, () -> instance.applyFile(patchItem, SELF_PATH));
+        }
+
+        @Test
+        void testInvalidActionStates() throws Exception {
+            assertAll(
+                    () -> assertThrows(IllegalStateException.class, () -> {
+                        patchItem.setAction(PatchAction.DELTA);
+                        instance.applyFile(patchItem, SELF_PATH);
+                    }),
+                    () -> assertThrows(IllegalStateException.class, () -> {
+                        patchItem.setAction(PatchAction.COMPRESSED_FILE);
+                        instance.applyFile(patchItem, SELF_PATH);
+                    })
             );
         }
     }
 
     @Nested
-    class DirectoryComparison {
-        @Test
-        void compareDirectories() throws Exception {
-            PatchDirectoryItem directoryItem = instance.compareDirectory(Paths.get("."));
+    class ApplyDirectory {
 
-            assertThat(directoryItem.getItems(), containsInAnyOrder(
-                    patchItemWith(PatchFileItem.class, FILENAME_UNCHANGED, PatchAction.UNCHANGED),
-                    patchItemWith(PatchFileItem.class, FILENAME_NEW, PatchAction.ADD),
-                    patchItemWith(PatchFileItem.class, FILENAME_REMOVED_FROM_SOURCE, PatchAction.REMOVE),
-                    patchItemWith(PatchFileItem.class, FILENAME_MODIFIED_FROM_SOURCE, PatchAction.BSDIFF),
-                    patchItemWith(PatchFileItem.class, FILENAME_MODIFIED_FROM_INITIAL, PatchAction.BSDIFF_FROM_INITIAL_BASELINE),
-                    patchItemWith(PatchDirectoryItem.class, DIRECTORY_UNCHANGED, PatchAction.DELTA),
-                    patchItemWith(PatchDirectoryItem.class, DIRECTORY_NEW, PatchAction.ADD),
-                    patchItemWith(PatchDirectoryItem.class, DIRECTORY_REMOVED, PatchAction.REMOVE),
-                    patchItemWith(PatchDirectoryItem.class, DIRECTORY_ZIP, PatchAction.DELTA)
-            ));
+        private static final String DIRECTORY_NAME = "someDirectory";
+        private final Path targetFolder;
+        private final Path patchFolder;
+        private PatchDirectoryItem patchItem;
+
+        {
+            targetFolder = rootTargetFolder.resolve(SELF_PATH).resolve(DIRECTORY_NAME);
+            patchFolder = rootPatchFolder.resolve(SELF_PATH).resolve(DIRECTORY_NAME);
         }
-    }
 
-    @Nested
-    class ArchiveComparison {
-        @Test
-        void compareDirectories() throws Exception {
-            PatchDirectoryItem directoryItem = instance.compareDirectory(Paths.get(FOLDER_ZIP));
-
-            assertThat(directoryItem.getItems(), containsInAnyOrder(
-                    patchItemWith(PatchCompressedItem.class, ARCHIVE_UNCHANGED, PatchAction.UNCHANGED),
-                    patchItemWith(PatchCompressedItem.class, ARCHIVE_NEW, PatchAction.ADD),
-                    patchItemWith(PatchCompressedItem.class, ARCHIVE_REMOVED_FROM_SOURCE, PatchAction.REMOVE),
-                    patchItemWith(PatchCompressedItem.class, ARCHIVE_MODIFIED_FROM_SOURCE, PatchAction.COMPRESSED_FILE),
-                    patchItemWith(PatchCompressedItem.class, ARCHIVE_MODIFIED_FROM_INITIAL, PatchAction.COMPRESSED_FILE)
-            ));
-
-            verify(bsdiff4Service, times(2)).createPatch(any(), any(), any());
+        @BeforeEach
+        void beforeEach() {
+            patchItem = new PatchDirectoryItem()
+                    .setName(DIRECTORY_NAME);
         }
 
         @Test
-        void compareZipUnchanged() throws Exception {
-            PatchCompressedItem item = instance.compareZipFile(Paths.get(FOLDER_ZIP, ARCHIVE_UNCHANGED));
+        void testAdd() throws Exception {
+            patchItem.setAction(PatchAction.ADD);
 
-            assertAll("item",
-                    () -> assertEquals(ARCHIVE_UNCHANGED, item.getName()),
-                    () -> assertEquals(PatchAction.UNCHANGED, item.getAction())
+            instance.applyDirectory(patchItem, SELF_PATH);
+
+            verify(ioService).copyDirectory(patchFolder, targetFolder);
+            verifyNoMoreInteractions(ioService);
+            verifyZeroInteractions(bsdiff4Service);
+        }
+
+        @Test
+        void testRemove() throws Exception {
+            patchItem.setAction(PatchAction.REMOVE);
+
+            instance.applyDirectory(patchItem, SELF_PATH);
+
+            verifyZeroInteractions(ioService);
+            verifyZeroInteractions(bsdiff4Service);
+        }
+
+        @Test
+        void testDelta() throws Exception {
+            patchItem.setAction(PatchAction.DELTA);
+            String folderName = "added";
+            patchItem.setItems(Sets.newHashSet(new PatchDirectoryItem()
+                    .setAction(PatchAction.ADD)
+                    .setName(folderName)));
+
+            instance.applyDirectory(patchItem, SELF_PATH);
+
+            verify(ioService).copyDirectory(patchFolder.resolve(folderName), targetFolder.resolve(folderName));
+            verifyNoMoreInteractions(ioService);
+            verifyZeroInteractions(bsdiff4Service);
+        }
+
+        @Test
+        void testInvalidActionStates() throws Exception {
+            assertAll(
+                    () -> assertThrows(IllegalStateException.class, () -> {
+                        patchItem.setAction(PatchAction.UNCHANGED);
+                        instance.applyDirectory(patchItem, SELF_PATH);
+                    }),
+                    () -> assertThrows(IllegalStateException.class, () -> {
+                        patchItem.setAction(PatchAction.BSDIFF);
+                        instance.applyDirectory(patchItem, SELF_PATH);
+                    }),
+                    () -> assertThrows(IllegalStateException.class, () -> {
+                        patchItem.setAction(PatchAction.BSDIFF_FROM_INITIAL_BASELINE);
+                        instance.applyDirectory(patchItem, SELF_PATH);
+                    }),
+                    () -> assertThrows(IllegalStateException.class, () -> {
+                        patchItem.setAction(PatchAction.COMPRESSED_FILE);
+                        instance.applyDirectory(patchItem, SELF_PATH);
+                    })
             );
-
-            verify(bsdiff4Service, never()).createPatch(any(Path.class), any(Path.class), any(Path.class));
         }
-
-        @Test
-        void compareZipNew() throws Exception {
-            PatchCompressedItem item = instance.compareZipFile(Paths.get(FOLDER_ZIP, ARCHIVE_NEW));
-
-            assertAll("item",
-                    () -> assertEquals(ARCHIVE_NEW, item.getName()),
-                    () -> assertEquals(PatchAction.ADD, item.getAction())
-            );
-
-            verify(bsdiff4Service, never()).createPatch(any(Path.class), any(Path.class), any(Path.class));
-        }
-
-        @Test
-        void compareZipRemovedFromSource() throws Exception {
-            PatchCompressedItem item = instance.compareZipFile(Paths.get(FOLDER_ZIP, ARCHIVE_REMOVED_FROM_SOURCE));
-
-            assertAll("item",
-                    () -> assertEquals(ARCHIVE_REMOVED_FROM_SOURCE, item.getName()),
-                    () -> assertEquals(PatchAction.REMOVE, item.getAction())
-            );
-
-            verify(bsdiff4Service, never()).createPatch(any(Path.class), any(Path.class), any(Path.class));
-        }
-
-        @Test
-        void compareZipModifiedFromSource() throws Exception {
-            PatchCompressedItem item = instance.compareZipFile(Paths.get(FOLDER_ZIP, ARCHIVE_MODIFIED_FROM_SOURCE));
-
-            assertAll("item",
-                    () -> assertEquals(ARCHIVE_MODIFIED_FROM_SOURCE, item.getName()),
-                    () -> assertEquals(PatchAction.COMPRESSED_FILE, item.getAction())
-            );
-
-            verify(bsdiff4Service).createPatch(any(Path.class), any(Path.class), any(Path.class));
-        }
-
-        @Test
-        void compareZipModifiedFromInitial() throws Exception {
-            PatchCompressedItem item = instance.compareZipFile(Paths.get(FOLDER_ZIP, ARCHIVE_MODIFIED_FROM_INITIAL));
-
-            assertAll("item",
-                    () -> assertEquals(ARCHIVE_MODIFIED_FROM_INITIAL, item.getName()),
-                    () -> assertEquals(PatchAction.COMPRESSED_FILE, item.getAction())
-            );
-
-            verify(bsdiff4Service).createPatch(any(Path.class), any(Path.class), any(Path.class));
-        }
-    }
-
-    @Test
-    void testCompare() throws Exception {
-        PatchMetadata metadata = instance.compare();
-
-        assertAll("metadata",
-                () -> assertEquals(1, metadata.getProtocol()),
-                () -> assertThat(metadata.getItems(), containsInAnyOrder(
-                        patchItemWith(PatchFileItem.class, FILENAME_UNCHANGED, PatchAction.UNCHANGED),
-                        patchItemWith(PatchFileItem.class, FILENAME_NEW, PatchAction.ADD),
-                        patchItemWith(PatchFileItem.class, FILENAME_REMOVED_FROM_SOURCE, PatchAction.REMOVE),
-                        patchItemWith(PatchFileItem.class, FILENAME_MODIFIED_FROM_SOURCE, PatchAction.BSDIFF),
-                        patchItemWith(PatchFileItem.class, FILENAME_MODIFIED_FROM_INITIAL, PatchAction.BSDIFF_FROM_INITIAL_BASELINE),
-                        patchItemWith(PatchDirectoryItem.class, DIRECTORY_UNCHANGED, PatchAction.DELTA),
-                        patchItemWith(PatchDirectoryItem.class, DIRECTORY_NEW, PatchAction.ADD),
-                        patchItemWith(PatchDirectoryItem.class, DIRECTORY_REMOVED, PatchAction.REMOVE),
-                        patchItemWith(PatchDirectoryItem.class, DIRECTORY_ZIP, PatchAction.DELTA)
-                ))
-        );
-
-        // 2 files bsdiff'ed on top level and 2 files inside DIRECTORY_ZIP
-        verify(bsdiff4Service, times(4)).createPatch(any(), any(), any());
     }
 
     private Matcher<PatchItem> patchItemWith(Class<? extends PatchItem> clazz, String name, PatchAction action) {

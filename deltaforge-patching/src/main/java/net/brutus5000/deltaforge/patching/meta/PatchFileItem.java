@@ -14,4 +14,9 @@ public class PatchFileItem implements PatchItem {
      * Checksum of the target file
      */
     private String targetCrc;
+
+    @Override
+    public boolean requiresInitialBaseline() {
+        return action == PatchAction.BSDIFF_FROM_INITIAL_BASELINE;
+    }
 }
