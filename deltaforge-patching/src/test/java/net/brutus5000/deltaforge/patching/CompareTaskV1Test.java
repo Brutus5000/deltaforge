@@ -3,10 +3,7 @@ package net.brutus5000.deltaforge.patching;
 import com.google.common.collect.Sets;
 import net.brutus5000.deltaforge.patching.io.Bsdiff4Service;
 import net.brutus5000.deltaforge.patching.io.IoService;
-import net.brutus5000.deltaforge.patching.meta.PatchAction;
-import net.brutus5000.deltaforge.patching.meta.PatchDirectoryItem;
-import net.brutus5000.deltaforge.patching.meta.PatchFileItem;
-import net.brutus5000.deltaforge.patching.meta.PatchItem;
+import net.brutus5000.deltaforge.patching.meta.*;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -30,22 +27,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CompareTaskV1Test {
-    private final static String FILENAME_UNCHANGED = "unchanged.txt";
-    private final static String FILENAME_NEW = "new.txt";
-    private final static String FILENAME_REMOVED_FROM_SOURCE = "removed-from-source.txt";
-    private final static String FILENAME_MODIFIED_FROM_SOURCE = "modified-from-source.txt";
-    private final static String DIRECTORY_UNCHANGED = "unchanged-folder";
-    private final static String DIRECTORY_NEW = "new-folder";
-    private final static String DIRECTORY_REMOVED = "removed-folder";
-    private final static String DIRECTORY_ZIP = "zip";
-    private final static String FILENAME_MODIFIED_FROM_INITIAL = "modified-from-initial.txt";
-    private final static String ARCHIVE_UNCHANGED = "unchanged.zip";
-    private final static String ARCHIVE_NEW = "new.zip";
-    private final static String ARCHIVE_REMOVED_FROM_SOURCE = "removed-from-source.zip";
-    private final static String ARCHIVE_MODIFIED_FROM_SOURCE = "modified-from-source.zip";
-    private final static String ARCHIVE_MODIFIED_FROM_INITIAL = "modified-from-initial.zip";
-    private final static String FOLDER_ZIP = "zip";
-
     private static final Path SELF_PATH = Paths.get(".");
     private static final String FILE_PREFIX = "./src/test/resources/";
     private static final String PATCH_NAME = "source_to_target";
@@ -265,6 +246,56 @@ class CompareTaskV1Test {
                         instance.applyDirectory(patchItem, SELF_PATH);
                     })
             );
+        }
+    }
+
+    @Nested
+    class ApplyZipFile {
+        private static final String FILE_NAME = "someFile.zip";
+        private final Path sourceZipFile;
+        private final Path targetZipFile;
+        private final Path patchZipFile;
+        private final Path initialBaselineZipFile;
+        private PatchCompressedItem patchItem;
+
+        {
+            sourceZipFile = rootSourceFolder.resolve(SELF_PATH).resolve(FILE_NAME);
+            targetZipFile = rootTargetFolder.resolve(SELF_PATH).resolve(FILE_NAME);
+            patchZipFile = rootPatchFolder.resolve(SELF_PATH).resolve(FILE_NAME);
+            initialBaselineZipFile = rootInitialBaselineFolder.resolve(SELF_PATH).resolve(FILE_NAME);
+        }
+
+        @BeforeEach
+        void beforeEach() {
+            patchItem = new PatchCompressedItem()
+                    .setName(FILE_NAME);
+        }
+
+        @Test
+        void testApplyWithoutItems() throws Exception {
+            patchItem.setItems(Sets.newHashSet());
+
+            final Path tempRootDirectory = Paths.get("someTemporaryZipPath");
+            final Path sourceFolder = tempRootDirectory.resolve("source");
+            final Path targetFolder = tempRootDirectory.resolve("target");
+            final Path initialBaselineFolder = tempRootDirectory.resolve("initialBaseline");
+            final Path patchFolder = tempRootDirectory.resolve("patch");
+
+            doReturn(sourceFolder).when(ioService).createDirectories(sourceFolder);
+            doReturn(targetFolder).when(ioService).createDirectories(targetFolder);
+            doReturn(initialBaselineFolder).when(ioService).createDirectories(initialBaselineFolder);
+            doReturn(patchFolder).when(ioService).createDirectories(patchFolder);
+            doReturn(tempRootDirectory).when(ioService).createTempDirectory("deltaforge_zip_root_");
+
+            instance.applyZipFile(patchItem, SELF_PATH);
+
+            verify(ioService).unzip(sourceZipFile, sourceFolder);
+            verify(ioService).unzip(targetZipFile, targetFolder);
+            verify(ioService).unzip(patchZipFile, patchFolder);
+            verify(ioService).zip(eq(targetFolder), any(Path.class));
+            verify(ioService).deleteDirectory(tempRootDirectory);
+            verifyNoMoreInteractions(ioService);
+            verifyZeroInteractions(bsdiff4Service);
         }
     }
 

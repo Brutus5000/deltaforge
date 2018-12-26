@@ -13,10 +13,6 @@ jar {
     enabled = true
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation "org.slf4j:slf4j-api"
     compile "com.fasterxml.jackson.core:jackson-annotations"
