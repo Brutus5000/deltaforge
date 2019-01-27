@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/deltaforge
-    username: postgres
-    password: banana
+    url: jdbc:h2:mem:deltaforge
+    username: sa
+    password:
   jackson:
     default-property-inclusion: non_null
   jpa:

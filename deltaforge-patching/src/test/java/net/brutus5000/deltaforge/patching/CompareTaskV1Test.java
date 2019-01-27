@@ -3,7 +3,7 @@ package net.brutus5000.deltaforge.patching;
 import com.google.common.collect.Sets;
 import net.brutus5000.deltaforge.patching.io.Bsdiff4Service;
 import net.brutus5000.deltaforge.patching.io.IoService;
-import net.brutus5000.deltaforge.patching.meta.*;
+import net.brutus5000.deltaforge.patching.meta.patch.*;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;

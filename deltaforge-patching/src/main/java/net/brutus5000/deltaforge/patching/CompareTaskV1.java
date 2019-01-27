@@ -4,7 +4,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.brutus5000.deltaforge.patching.io.Bsdiff4Service;
 import net.brutus5000.deltaforge.patching.io.IoService;
-import net.brutus5000.deltaforge.patching.meta.*;
+import net.brutus5000.deltaforge.patching.meta.patch.*;
 
 import java.io.IOException;
 import java.nio.file.Path;

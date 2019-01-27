@@ -9,8 +9,8 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter-data-rest"
     compile "org.springframework.boot:spring-boot-starter-data-jpa"
     runtime "org.postgresql:postgresql"
+    runtime "com.h2database:h2"
     testCompile "org.springframework.boot:spring-boot-starter-test"
-    testCompile "com.h2database:h2"
 
     // Standalone dependencies:
     implementation project(":deltaforge-patching")
