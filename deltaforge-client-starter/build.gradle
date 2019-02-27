@@ -1,0 +1,33 @@
+group = 'net.brutus5000'
+version = '0.0.1-SNAPSHOT'
+description = 'deltaforge-client-starter'
+sourceCompatibility = '11'
+
+bootJar {
+    // deactivate the building of the fatjar because this is a library
+    enabled = false
+}
+
+jar {
+    // re-enable the regular jar packaging
+    enabled = true
+}
+
+dependencies {
+    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+    annotationProcessor("org.mapstruct:mapstruct-processor:${mapstructVersion}")
+    implementation project(":deltaforge-patching")
+    implementation("org.mapstruct:mapstruct-jdk8:${mapstructVersion}")
+    compile("org.springframework.boot:spring-boot-starter")
+    compile("org.springframework.boot:spring-boot-starter-json")
+    compile("org.springframework.boot:spring-boot-starter-validation")
+    compile("org.springframework.boot:spring-boot-autoconfigure")
+    compile("com.fasterxml.jackson.core:jackson-annotations")
+    compile("com.google.guava:guava:${guavaVersion}")
+    compile("commons-io:commons-io:${apacheCommonsIoVersion}")
+    compile("org.apache.commons:commons-compress:${apacheCommonsCompressVersion}")
+    compile("com.github.brutus5000:jbsdiff:${jbsdiffVersion}")
+    compile("org.jgrapht:jgrapht-core:${jgraphtVersion}")
+    compile("org.jgrapht:jgrapht-io:${jgraphtVersion}")
+    compile("org.jgrapht:jgrapht-guava:${jgraphtVersion}")
+}

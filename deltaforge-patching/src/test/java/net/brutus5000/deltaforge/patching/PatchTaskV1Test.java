@@ -26,7 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class CompareTaskV1Test {
+class PatchTaskV1Test {
     private static final Path SELF_PATH = Paths.get(".");
     private static final String FILE_PREFIX = "./src/test/resources/";
     private static final String PATCH_NAME = "source_to_target";
@@ -39,7 +39,7 @@ class CompareTaskV1Test {
     private final Path rootPatchFolder;
     @Mock
     private IoService ioService;
-    private CompareTaskV1 instance;
+    private PatchTaskV1 instance;
 
     {
         rootPatchFolder = Paths.get(FILE_PREFIX + "testRepo/temp/patching/" + PATCH_NAME);
@@ -51,7 +51,7 @@ class CompareTaskV1Test {
     @BeforeEach
     void beforeEach() throws Exception {
 
-        instance = new CompareTaskV1(
+        instance = new PatchTaskV1(
                 bsdiff4Service, ioService, rootSourceFolder,
                 rootInitialBaselineFolder,
                 rootTargetFolder,

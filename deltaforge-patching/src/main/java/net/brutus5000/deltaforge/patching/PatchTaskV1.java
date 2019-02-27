@@ -14,7 +14,7 @@ import java.util.Objects;
 import java.util.Set;
 
 @Slf4j
-public class CompareTaskV1 {
+public class PatchTaskV1 {
     private final Bsdiff4Service bsdiff4Service;
     private final IoService ioService;
     private final Path rootSourceFolder;
@@ -22,12 +22,12 @@ public class CompareTaskV1 {
     private final Path rootTargetFolder;
     private final Path rootPatchFolder;
     private final String repositoryName;
-    private final String fromTagName;
-    private final String toTagName;
 
-    public CompareTaskV1(Bsdiff4Service bsdiff4Service, IoService ioService, Path sourceFolder, Path initialBaselineFolder,
-                         Path targetFolder, Path patchFolder, String repositoryName, String fromTagName,
-                         String toTagName) {
+    private String fromTagName;
+    private String toTagName;
+
+    public PatchTaskV1(Bsdiff4Service bsdiff4Service, IoService ioService, Path sourceFolder, Path initialBaselineFolder,
+                       Path targetFolder, Path patchFolder, String repositoryName) {
         this.bsdiff4Service = bsdiff4Service;
         this.ioService = ioService;
         this.rootSourceFolder = sourceFolder;
@@ -35,11 +35,12 @@ public class CompareTaskV1 {
         this.rootTargetFolder = targetFolder;
         this.rootPatchFolder = patchFolder;
         this.repositoryName = repositoryName;
-        this.fromTagName = fromTagName;
-        this.toTagName = toTagName;
     }
 
-    public PatchMetadata compare() throws IOException {
+    public PatchMetadata compare(String fromTagName, String toTagName) throws IOException {
+        this.fromTagName = fromTagName;
+        this.toTagName = toTagName;
+
         Path of = Paths.get(".");
         PatchDirectoryItem root = compareDirectory(of);
 
@@ -212,9 +213,8 @@ public class CompareTaskV1 {
             ioService.unzip(sourceArchive, baselineTemp);
         }
 
-        CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, ioService, sourceTemp, baselineTemp, targetTemp, patchFolder,
-                repositoryName, fromTagName, toTagName);
-        PatchMetadata patchMetadata = compareTask.compare();
+        PatchTaskV1 compareTask = new PatchTaskV1(bsdiff4Service, ioService, sourceTemp, baselineTemp, targetTemp, patchFolder, repositoryName);
+        PatchMetadata patchMetadata = compareTask.compare(fromTagName, toTagName);
         item.setItems(patchMetadata.getItems());
 
         ioService.deleteQuietly(sourceTemp);
@@ -319,8 +319,7 @@ public class CompareTaskV1 {
             ioService.unzip(rootInitialBaselineFolder.resolve(relativeFolderPath).resolve(compressedItem.getName()), initialBaselineFolder);
         }
 
-        CompareTaskV1 zipCompareTask = new CompareTaskV1(bsdiff4Service, ioService, sourceFolder, initialBaselineFolder, targetFolder, patchFolder,
-                repositoryName, fromTagName, toTagName);
+        PatchTaskV1 zipCompareTask = new PatchTaskV1(bsdiff4Service, ioService, sourceFolder, initialBaselineFolder, targetFolder, patchFolder, repositoryName);
 
         zipCompareTask.applyItems(compressedItem.getItems(), Paths.get("."));
 

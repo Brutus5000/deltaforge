@@ -2,7 +2,7 @@ package net.brutus5000.deltaforge.server.api;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import net.brutus5000.deltaforge.patching.CompareTaskV1;
+import net.brutus5000.deltaforge.patching.PatchTaskV1;
 import net.brutus5000.deltaforge.patching.io.Bsdiff4Service;
 import net.brutus5000.deltaforge.patching.io.IoService;
 import net.brutus5000.deltaforge.patching.meta.patch.PatchMetadata;
@@ -89,11 +89,10 @@ public class PatchWorker {
 
         try {
             patchDirectory = Files.createTempDirectory("deltaforge_");
-            CompareTaskV1 compareTask = new CompareTaskV1(bsdiff4Service, ioService, fileService.buildTagPath(patch.getFrom()),
+            PatchTaskV1 compareTask = new PatchTaskV1(bsdiff4Service, ioService, fileService.buildTagPath(patch.getFrom()),
                     fileService.buildBaselineTagPath(patch.getRepository()), fileService.buildTagPath(patch.getTo()),
-                    patchDirectory, patchTask.getFrom().getRepository().getName(), patchTask.getFrom().getName(),
-                    patchTask.getTo().getName());
-            PatchMetadata metadata = compareTask.compare();
+                    patchDirectory, patchTask.getTo().getName());
+            PatchMetadata metadata = compareTask.compare(patchTask.getFrom().getRepository().getName(), patchTask.getFrom().getName());
 
             fileService.writeMetadata(patch, metadata);
             fileService.zipPatchFolderContent(patch, patchDirectory);

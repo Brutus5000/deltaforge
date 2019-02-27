@@ -27,7 +27,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class CompareTaskV1IT {
+public class PatchTaskV1IT {
     private final static String FILENAME_UNCHANGED = "unchanged.txt";
     private final static String FILENAME_NEW = "new.txt";
     private final static String FILENAME_REMOVED_FROM_SOURCE = "removed-from-source.txt";
@@ -54,7 +54,7 @@ public class CompareTaskV1IT {
     @Mock
     private Bsdiff4Service bsdiff4Service;
     private IoService ioService;
-    private CompareTaskV1 instance;
+    private PatchTaskV1 instance;
 
     {
         rootPatchFolder = Paths.get(FILE_PREFIX + "testRepo/temp/patching/" + PATCH_NAME);
@@ -66,7 +66,7 @@ public class CompareTaskV1IT {
     @BeforeEach
     void beforeEach() throws Exception {
         ioService = new IoService();
-        instance = new CompareTaskV1(
+        instance = new PatchTaskV1(
                 bsdiff4Service,
                 ioService, rootSourceFolder,
                 rootInitialBaselineFolder,

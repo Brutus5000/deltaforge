@@ -1,3 +1,4 @@
 include 'deltaforge-patching'
 include 'deltaforge-server'
+include 'deltaforge-client-starter'
 

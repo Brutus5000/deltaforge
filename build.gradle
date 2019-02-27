@@ -28,11 +28,18 @@ subprojects {
 
         testImplementation "org.junit.jupiter:junit-jupiter-api"
         testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
-        testCompile "org.mockito:mockito-junit-jupiter"
+        testCompileOnly "org.mockito:mockito-junit-jupiter"
+
+
+//        testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+//        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+//        testCompileOnly("org.mockito:mockito-core:${mockitoVersion}")
+//        testCompileOnly("org.mockito:mockito-junit-jupiter:${mockitoExtensionVersion}")
+
 
         // Standalone dependencies:
         compile "org.jetbrains:annotations:${jetbrainsAnnotationsVersion}"
-        testCompile "org.hamcrest:hamcrest:${hamcrestVersion}"
+        testImplementation "org.hamcrest:hamcrest:${hamcrestVersion}"
     }
 
     test {
