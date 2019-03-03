@@ -27,21 +27,21 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class DeltaforgeClientTest {
     @Mock
-    ApiClient apiClient;
+    private ApiClient apiClient;
 
     @Mock
-    DeltaforgeClientProperties properties;
+    private DeltaforgeClientProperties properties;
 
     @Mock
-    ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
 
     @Mock
-    DownloadService downloadService;
+    private DownloadService downloadService;
 
     @Mock
-    RepositoryService repositoryService;
+    private RepositoryService repositoryService;
 
-    DeltaforgeClient underTest;
+    private DeltaforgeClient underTest;
 
     @BeforeEach
     void beforeEach() throws Exception {
@@ -77,7 +77,7 @@ class DeltaforgeClientTest {
         final String TAG_NAME = "myTag";
         final String EXCEPTION_MESSAGE = "someMessage";
 
-        doThrow(new CheckoutException(EXCEPTION_MESSAGE, null)).when(repositoryService).getPatchPath(any(), anyString());
+        doThrow(new CheckoutException(EXCEPTION_MESSAGE, null)).when(repositoryService).calculatePatchPath(any(), anyString());
 
         Repository localRepository = new Repository();
 
@@ -102,11 +102,11 @@ class DeltaforgeClientTest {
 
         Repository localRepository = new Repository();
 
-        doReturn(Lists.newArrayList(mock(Patch.class), mock(Patch.class))).when(repositoryService).getPatchPath(any(), anyString());
+        doReturn(Lists.newArrayList(mock(Patch.class), mock(Patch.class))).when(repositoryService).calculatePatchPath(any(), anyString());
 
         underTest.checkoutTag(localRepository, TAG_NAME);
 
-        verify(repositoryService).getPatchPath(localRepository, TAG_NAME);
+        verify(repositoryService).calculatePatchPath(localRepository, TAG_NAME);
         verify(repositoryService, times(2)).downloadPatchIfMissing(eq(localRepository), any());
         verify(repositoryService, times(2)).applyPatch(eq(localRepository), any());
     }
@@ -133,12 +133,12 @@ class DeltaforgeClientTest {
         Repository repository = mock(Repository.class);
         doReturn(Optional.of(new Tag().setName(TAG_NAME))).when(repository).getLatestTag(BRANCH_NAME);
 
-        doReturn(Lists.newArrayList(mock(Patch.class), mock(Patch.class))).when(repositoryService).getPatchPath(any(), anyString());
+        doReturn(Lists.newArrayList(mock(Patch.class), mock(Patch.class))).when(repositoryService).calculatePatchPath(any(), anyString());
 
         underTest.checkoutLatest(repository, BRANCH_NAME);
 
         verify(repositoryService).refreshTagGraph(repository);
-        verify(repositoryService).getPatchPath(repository, TAG_NAME);
+        verify(repositoryService).calculatePatchPath(repository, TAG_NAME);
         verify(repositoryService, times(2)).downloadPatchIfMissing(eq(repository), any());
         verify(repositoryService, times(2)).applyPatch(eq(repository), any());
     }

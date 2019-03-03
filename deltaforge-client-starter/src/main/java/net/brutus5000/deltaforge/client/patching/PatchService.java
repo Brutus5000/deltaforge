@@ -1,4 +1,4 @@
-package net.brutus5000.deltaforge.client;
+package net.brutus5000.deltaforge.client.patching;
 
 import net.brutus5000.deltaforge.patching.PatchTaskV1;
 import net.brutus5000.deltaforge.patching.io.Bsdiff4Service;

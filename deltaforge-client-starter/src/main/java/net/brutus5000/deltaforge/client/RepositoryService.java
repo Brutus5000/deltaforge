@@ -1,6 +1,7 @@
 package net.brutus5000.deltaforge.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import net.brutus5000.deltaforge.client.api.ApiClient;
 import net.brutus5000.deltaforge.client.error.CheckoutException;
@@ -10,26 +11,19 @@ import net.brutus5000.deltaforge.client.model.Patch;
 import net.brutus5000.deltaforge.client.model.Repository;
 import net.brutus5000.deltaforge.client.model.Tag;
 import net.brutus5000.deltaforge.client.model.TagType;
+import net.brutus5000.deltaforge.client.patching.PatchGraph;
+import net.brutus5000.deltaforge.client.patching.PatchGraphFactory;
+import net.brutus5000.deltaforge.client.patching.PatchService;
 import net.brutus5000.deltaforge.patching.io.IoService;
 import net.brutus5000.deltaforge.patching.io.ValidationService;
 import net.brutus5000.deltaforge.patching.meta.patch.PatchRequest;
-import org.jgrapht.Graph;
-import org.jgrapht.GraphPath;
-import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
-import org.jgrapht.graph.DirectedMultigraph;
-import org.jgrapht.io.GraphMLImporter;
-import org.jgrapht.io.ImportException;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.text.MessageFormat;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -41,9 +35,13 @@ public class RepositoryService {
     private final ApiClient apiClient;
     private final DownloadService downloadService;
     private final PatchService patchService;
+    private final PatchGraphFactory patchGraphFactory;
+    private final Map<Repository, RepositoryCacheItem> repositoryCache = new HashMap<>();
 
     public RepositoryService(DeltaforgeClientProperties properties, IoService ioService,
-                             ObjectMapper objectMapper, ValidationService validationService, ApiClient apiClient, DownloadService downloadService, PatchService patchService) {
+                             ObjectMapper objectMapper, ValidationService validationService, ApiClient apiClient,
+                             DownloadService downloadService, PatchService patchService,
+                             PatchGraphFactory patchGraphFactory) {
         this.properties = properties;
         this.ioService = ioService;
         this.objectMapper = objectMapper;
@@ -51,18 +49,45 @@ public class RepositoryService {
         this.apiClient = apiClient;
         this.downloadService = downloadService;
         this.patchService = patchService;
+        this.patchGraphFactory = patchGraphFactory;
+    }
+
+    private Optional<Repository> fromCache(String repositoryName) {
+        return repositoryCache.keySet().stream()
+                .filter(repository -> Objects.equals(repositoryName, repository.getName()))
+                .findFirst();
+    }
+
+    private void afterLoad(Repository repository) {
+        RepositoryCacheItem cacheItem = new RepositoryCacheItem()
+                .setPatchGraph(patchGraphFactory.buildPatchGraph(repository));
+
+        repositoryCache.put(repository, cacheItem);
     }
 
     public Optional<Repository> findByName(String name) throws IOException {
+        Optional<Repository> cacheResult = fromCache(name);
+
+        if (cacheResult.isPresent()) {
+            return cacheResult;
+        }
+
         Path infoPath = Path.of(properties.getRootDirectory(), name, Repository.DELTAFORGE_INFO_FILE);
         if (!ioService.isFile(infoPath)) {
             return Optional.empty();
         }
 
-        return Optional.of(objectMapper.readValue(infoPath.toFile(), Repository.class));
+        Repository repository = objectMapper.readValue(infoPath.toFile(), Repository.class);
+        afterLoad(repository);
+
+        return Optional.of(repository);
     }
 
     public Repository initialize(String name, Path repositoryPath, Path sourceFolder) throws InitializeException {
+        Optional<Repository> cacheResult = fromCache(name);
+        if (cacheResult.isPresent()) {
+            throw new InitializeException("Repository is already cached: " + name);
+        }
 
         if (ioService.isDirectory(repositoryPath)) {
             throw new InitializeException("Cannot initialize into existing directory: " + repositoryPath);
@@ -80,6 +105,7 @@ public class RepositoryService {
             log.debug("Copy from sourceFiles `{}` to repositoryPath `{}`", sourceFolder, repositoryPath);
             ioService.copyDirectory(sourceFolder, repository.getCurrentTagFolder());
             objectMapper.writeValue(repository.getInfoPath().toFile(), repository);
+            afterLoad(repository);
 
             return repository;
         } catch (IOException e) {
@@ -93,8 +119,8 @@ public class RepositoryService {
         log.debug("Reload remote repository: {}", repository);
         Repository freshRepository = apiClient.getRepository(repository.getName());
 
-        repository
-                .setGraph(freshRepository.getGraph());
+        repository.setGraph(freshRepository.getGraph());
+        repositoryCache.get(repository).patchGraph.refreshGraph();
     }
 
     public Optional<Tag> identifySourceTag(Repository repository, Path sourceFolder) {
@@ -104,31 +130,15 @@ public class RepositoryService {
                 .findFirst();
     }
 
-    // TODO: Test
-    public List<Patch> getPatchPath(Repository repository, String tagName) throws ImportException {
-        GraphMLImporter<Tag, Patch> importer = new GraphMLImporter<>(
-                (id, attributes) -> repository.getTags().stream()
-                        .filter(tag -> Objects.equals(id, tag.getName()))
-                        .findFirst()
-                        .orElseThrow(() -> new CheckoutException("Unknown tag with id: " + id)),
-                (from, to, label, attributes) -> repository.getPatches().stream()
-                        .filter(patch -> Objects.equals(patch.getFrom(), from) &&
-                                Objects.equals(patch.getTo(), to))
-                        .findFirst()
-                        .orElseThrow(() -> new CheckoutException(MessageFormat.format("No patch found from {0} to {1}", from.getName(), to.getName())))
-        );
-
-        Graph<Tag, Patch> graph = new DirectedMultigraph<>(Patch.class);
-        importer.importGraph(graph, new StringReader(repository.getGraph()));
-
+    public List<Patch> calculatePatchPath(Repository repository, String tagName) throws CheckoutException {
         Tag currentTag = repository.findTagByName(repository.getCurrentTag())
                 .orElseThrow(() -> new CheckoutException("Unknown tag: " + repository.getCurrentTag()));
         Tag targetTag = repository.findTagByName(tagName)
                 .orElseThrow(() -> new CheckoutException("Unknown tag: " + tagName));
 
-        GraphPath<Tag, Patch> graphPath = DijkstraShortestPath.findPathBetween(graph, currentTag, targetTag);
+        PatchGraph patchGraph = repositoryCache.get(repository).getPatchGraph();
 
-        return graphPath.getEdgeList();
+        return patchGraph.getPatchPath(currentTag, targetTag);
     }
 
     public void downloadPatchIfMissing(Repository localRepository, Patch patch) throws InterruptedException, IOException, URISyntaxException {
@@ -177,5 +187,10 @@ public class RepositoryService {
         } catch (IOException e) {
             log.error("Applying patch failed: {}", e.getMessage(), e);
         }
+    }
+
+    @Data
+    static class RepositoryCacheItem {
+        private PatchGraph patchGraph;
     }
 }

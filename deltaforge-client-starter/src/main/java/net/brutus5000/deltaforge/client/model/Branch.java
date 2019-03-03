@@ -1,7 +1,6 @@
 package net.brutus5000.deltaforge.client.model;
 
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.time.OffsetDateTime;
 
@@ -16,7 +15,6 @@ import java.time.OffsetDateTime;
  * not be built upon 1.0 (again) instead of 2.0.
  */
 @Data
-@EqualsAndHashCode(of = "id")
 public class Branch {
     private String name;
     private Repository repository;

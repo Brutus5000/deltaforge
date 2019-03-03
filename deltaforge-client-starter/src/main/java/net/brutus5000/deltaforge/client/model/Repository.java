@@ -3,6 +3,7 @@ package net.brutus5000.deltaforge.client.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 
 import java.net.URL;
@@ -15,6 +16,7 @@ import java.util.Set;
 
 @Data
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE)
+@EqualsAndHashCode(of = "name")
 public class Repository {
     public static final String DELTAFORGE_CURRENT_TAG_FOLDER = "currentTag";
     public static final String DELTAFORGE_INITIAL_BASELINE_FOLDER = "initialBaseline";
@@ -29,7 +31,7 @@ public class Repository {
     private String currentTag;
     private Tag initialBaselineTag;
     private Integer protocolVersion;
-    private URL url;
+    private String url;
     private String strategy;
     private Set<Branch> branches = new HashSet<>();
     private Set<Tag> tags = new HashSet<>();

@@ -40,7 +40,7 @@ public class DeltaforgeClient {
             return;
         }
 
-        repositoryService.getPatchPath(repository, tagName)
+        repositoryService.calculatePatchPath(repository, tagName)
                 .forEach(patch -> {
                     try {
                         log.info("Downloading patch `{}`", patch);

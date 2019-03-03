@@ -1,6 +1,7 @@
 package net.brutus5000.deltaforge.server.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -44,6 +45,7 @@ public class Tag implements UniqueEntity {
     @Enumerated(EnumType.STRING)
     private TagType type;
 
+    @JsonRawValue
     private ValidateMetadata validateMetadata;
 
     @Transient

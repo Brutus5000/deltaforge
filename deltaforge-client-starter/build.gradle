@@ -30,4 +30,5 @@ dependencies {
     compile("org.jgrapht:jgrapht-core:${jgraphtVersion}")
     compile("org.jgrapht:jgrapht-io:${jgraphtVersion}")
     compile("org.jgrapht:jgrapht-guava:${jgraphtVersion}")
+    testCompile("org.springframework.boot:spring-boot-starter-test")
 }
