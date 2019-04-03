@@ -44,7 +44,7 @@ class BranchRepositoryIT {
 
     @Test
     void AsUnauthenticatedUser__GivenNoExistingBranch__WhenGetRequestOnBranches__shouldReturnEmptyList() throws Exception {
-        mockMvc.perform(get("/api/v1/branches"))
+        mockMvc.perform(get("/api/v1/branchDtos"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.page.totalElements", is(0)));
     }
@@ -53,7 +53,7 @@ class BranchRepositoryIT {
     void AsUnauthenticatedUser__GivenNoExistingBranch__WhenPostingEmptyBranchObject__shouldFailWithErrors() throws Exception {
         Branch branch = new Branch();
 
-        mockMvc.perform(post("/api/v1/branches")
+        mockMvc.perform(post("/api/v1/branchDtos")
                 .content(objectMapper.writeValueAsString(branch)))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errors[*].code", Matchers.contains(

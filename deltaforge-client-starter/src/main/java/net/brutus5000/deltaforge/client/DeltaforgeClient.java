@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -76,17 +77,18 @@ public class DeltaforgeClient {
         return repositoryService.initialize(name, Paths.get(properties.getRootDirectory(), name), sourceFiles);
     }
 
-    public Repository loadRepository(String name) throws IOException {
-        Repository localRepository = repositoryService.findByName(name)
-                .orElseThrow(() -> new IllegalStateException("RepositoryDto not found: " + name, null));
+    public Optional<Repository> loadRepository(String name) throws IOException {
+        Optional<Repository> repositoryOptional = repositoryService.findByName(name);
 
-        // try to update data from remote repository
-        try {
-            repositoryService.refreshTagGraph(localRepository);
-        } catch (IOException e) {
-            log.warn("Updating localRepository `{}` from remote failed: {}", localRepository, e);
-        }
+        repositoryOptional.ifPresent(repository -> {
+            // try to update data from remote repository
+            try {
+                repositoryService.refreshTagGraph(repository);
+            } catch (IOException e) {
+                log.warn("Updating localRepository `{}` from remote failed: {}", repository, e);
+            }
+        });
 
-        return localRepository;
+        return repositoryOptional;
     }
 }

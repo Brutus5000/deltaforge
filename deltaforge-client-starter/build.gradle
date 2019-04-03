@@ -14,10 +14,12 @@ jar {
 }
 
 dependencies {
+    implementation project(":deltaforge-api-dto")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     annotationProcessor("org.mapstruct:mapstruct-processor:${mapstructVersion}")
     implementation project(":deltaforge-patching")
     implementation("org.mapstruct:mapstruct-jdk8:${mapstructVersion}")
+    compile("com.github.jasminb:jsonapi-converter:${jsonapiConverterVersion}")
     compile("org.springframework.boot:spring-boot-starter")
     compile("org.springframework.boot:spring-boot-starter-json")
     compile("org.springframework.boot:spring-boot-starter-validation")

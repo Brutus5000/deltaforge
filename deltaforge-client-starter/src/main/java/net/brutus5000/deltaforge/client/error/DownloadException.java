@@ -1,10 +1,13 @@
-package net.brutus5000.deltaforge.client.io;
+package net.brutus5000.deltaforge.client.error;
 
 import lombok.Getter;
 
 import java.io.IOException;
 import java.net.URL;
 
+/**
+ * {@code DownloadException} can be thrown on errors download of a file.
+ */
 @Getter
 public class DownloadException extends IOException {
     private final URL url;

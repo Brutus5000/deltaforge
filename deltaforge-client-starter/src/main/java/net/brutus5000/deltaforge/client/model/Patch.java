@@ -11,6 +11,7 @@ import java.time.OffsetDateTime;
 public class Patch {
     public static final String DELTAFORGE_PATCH_PATTERN = "{0}__to__{1}";
 
+    private String id;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
     private Repository repository;

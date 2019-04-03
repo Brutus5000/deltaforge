@@ -1,0 +1,3 @@
+deltaforge:
+  server-url: http://localhost:8080
+  root-directory: out/test-data/repo

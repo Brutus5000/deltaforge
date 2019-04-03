@@ -3,6 +3,7 @@ package net.brutus5000.deltaforge.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.brutus5000.deltaforge.client.io.DownloadService;
 import net.brutus5000.deltaforge.client.io.SimpleDownloadService;
+import net.brutus5000.deltaforge.patching.io.Bsdiff4Service;
 import net.brutus5000.deltaforge.patching.io.IoService;
 import net.brutus5000.deltaforge.patching.io.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * This class prepares all relevant beans for usage as a Spring boot starter package.
+ */
 @Configuration
 @EnableConfigurationProperties(DeltaforgeClientProperties.class)
 public class DeltaforgeClientAutoConfiguration {
@@ -33,6 +37,12 @@ public class DeltaforgeClientAutoConfiguration {
     @ConditionalOnMissingBean
     public IoService ioService() {
         return new IoService();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public Bsdiff4Service bsdiff4Service() {
+        return new Bsdiff4Service();
     }
 
     @Bean

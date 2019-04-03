@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import net.brutus5000.deltaforge.api.dto.create.RepositoryCreate;
 import net.brutus5000.deltaforge.patching.io.Zipper;
 import net.brutus5000.deltaforge.patching.meta.patch.PatchMetadata;
 import net.brutus5000.deltaforge.server.config.DeltaforgeServerProperties;
@@ -102,14 +103,14 @@ public class FileService {
                 .setCurrentBaseline(baseTag)
                 .setCurrentTag(baseTag);
 
-        log.info("Creating new branch: {}", newBranch);
+        log.info("Creating new branchDto: {}", newBranch);
         branchRepository.save(newBranch);
 
         TagAssignment tagAssignment = new TagAssignment()
                 .setBranch(newBranch)
                 .setTag(baseTag);
 
-        log.debug("Creating tag assignment for new branch id '{}': {}", newBranch.getId(), tagAssignment);
+        log.debug("Creating tag assignment for new branchDto id '{}': {}", newBranch.getId(), tagAssignment);
         tagAssignmentRepository.save(tagAssignment);
     }
 
@@ -124,7 +125,7 @@ public class FileService {
                 .setBranch(branch)
                 .setTag(sourceTag);
 
-        log.debug("Creating tag assignment for branch id '{}': {}", branch.getId(), tagAssignment);
+        log.debug("Creating tag assignment for branchDto id '{}': {}", branch.getId(), tagAssignment);
         tagAssignmentRepository.save(tagAssignment);
 
         PatchTask patchTask = new PatchTask()

@@ -3,6 +3,8 @@ package net.brutus5000.deltaforge.server.api;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import net.brutus5000.deltaforge.api.dto.TagTypeDto;
+import net.brutus5000.deltaforge.api.dto.create.RepositoryCreate;
 import net.brutus5000.deltaforge.server.config.DeltaforgeServerProperties;
 import net.brutus5000.deltaforge.server.error.ApiException;
 import net.brutus5000.deltaforge.server.error.ErrorCode;
@@ -23,11 +25,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import static net.brutus5000.deltaforge.server.resthandler.ValidationBuilder.whenNotNull;
-
 @Service
 @Slf4j
 public class RepoService {
+    private final ApiDtoMapper apiDtoMapper;
     private final DeltaforgeServerProperties properties;
     private final RepositoryRepository repositoryRepository;
     private final BranchRepository branchRepository;
@@ -37,7 +38,8 @@ public class RepoService {
     private final PatchRepository patchRepository;
     private final FileService fileService;
 
-    public RepoService(DeltaforgeServerProperties properties, RepositoryRepository repositoryRepository, BranchRepository branchRepository, PatchTaskRepository patchTaskRepository, TagRepository tagRepository, TagAssignmentRepository tagAssignmentRepository, PatchRepository patchRepository, FileService fileService) {
+    public RepoService(ApiDtoMapper apiDtoMapper, DeltaforgeServerProperties properties, RepositoryRepository repositoryRepository, BranchRepository branchRepository, PatchTaskRepository patchTaskRepository, TagRepository tagRepository, TagAssignmentRepository tagAssignmentRepository, PatchRepository patchRepository, FileService fileService) {
+        this.apiDtoMapper = apiDtoMapper;
         this.properties = properties;
         this.repositoryRepository = repositoryRepository;
         this.branchRepository = branchRepository;
@@ -57,10 +59,6 @@ public class RepoService {
                         ErrorCode.REPOSITORY_NAME_IN_USE, repositoryCreate.getName())
                 .assertNotNull(repositoryCreate.getInitialBaseline(), "initialBaseline")
                 .assertThat(fileService::existsTagFolderPath, repositoryCreate, ErrorCode.TAG_FOLDER_NOT_EXISTS)
-                .conditionalAssertNotExists(
-                        whenNotNull(repositoryCreate.getGitUrl()),
-                        repositoryRepository::findByGitUrl, repositoryCreate.getGitUrl(),
-                        ErrorCode.REPOSITORY_GIT_URL_IN_USE, repositoryCreate.getName())
                 .validate();
     }
 
@@ -68,8 +66,7 @@ public class RepoService {
         validateCreate(repositoryCreate);
 
         Repository repository = new Repository()
-                .setName(repositoryCreate.getName())
-                .setGitUrl(repositoryCreate.getGitUrl());
+                .setName(repositoryCreate.getName());
 
         repositoryRepository.saveAndFlush(repository);
 
@@ -115,12 +112,17 @@ public class RepoService {
     }
 
     @Transactional
-    public void addTagToBranch(@NonNull UUID branchId, @NonNull UUID tagId, @NonNull TagType tagType) {
+    public void addTagToBranch(@NonNull UUID branchId, @NonNull UUID tagId, @NonNull String tagTypeName) {
         Branch branch = branchRepository.findById(branchId)
                 .orElseThrow(() -> ApiException.of(ErrorCode.BRANCH_NOT_FOUND, branchId));
 
         Tag tag = tagRepository.findById(tagId)
                 .orElseThrow(() -> ApiException.of(ErrorCode.TAG_NOT_FOUND, tagId.toString()));
+
+        TagTypeDto tagTypeDto = TagTypeDto.fromString(tagTypeName)
+                .orElseThrow(() -> ApiException.of(ErrorCode.TAG_INVALID_TYPE, tagTypeName));
+
+        TagType tagType = apiDtoMapper.map(tagTypeDto);
 
         Optional<TagAssignment> existingAssignment = tagAssignmentRepository.findByBranchAndTag(branch, tag);
         if (existingAssignment.isPresent()) {
@@ -131,7 +133,7 @@ public class RepoService {
                 .setBranch(branch)
                 .setTag(tag);
 
-        log.debug("Creating tag assignment for branch id '{}': {}", branchId, tagAssignment);
+        log.debug("Creating tag assignment for branchDto id '{}': {}", branchId, tagAssignment);
         tagAssignmentRepository.save(tagAssignment);
 
         Tag initialBaselineTag = branch.getRepository().getInitialBaseline();
@@ -144,7 +146,7 @@ public class RepoService {
             enqueuePatch(initialBaselineTag, tag, branch.getCurrentTag(), false);
         }
 
-        log.debug("Updating branch '{}' current tag to: {}", branch, tag);
+        log.debug("Updating branchDto '{}' current tag to: {}", branch, tag);
         branch.setCurrentTag(tag);
         branchRepository.save(branch);
     }

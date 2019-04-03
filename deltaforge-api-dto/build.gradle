@@ -1,0 +1,21 @@
+group = 'net.brutus5000'
+version = '0.0.1-SNAPSHOT'
+description = 'deltaforge-api-dto'
+sourceCompatibility = '11'
+
+bootJar {
+    // deactivate the building of the fatjar because this is a library
+    enabled = false
+}
+
+jar {
+    // re-enable the regular jar packaging
+    enabled = true
+}
+
+dependencies {
+    implementation project(":deltaforge-patching")
+    implementation "org.slf4j:slf4j-api"
+    compile "com.github.jasminb:jsonapi-converter:${jsonapiConverterVersion}"
+    compile "com.fasterxml.jackson.core:jackson-annotations"
+}

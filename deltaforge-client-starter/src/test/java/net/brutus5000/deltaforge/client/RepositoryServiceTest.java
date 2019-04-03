@@ -146,6 +146,15 @@ class RepositoryServiceTest {
             }
 
             @Test
+            void withApiCallNoResultInitializeShouldFail() throws Exception {
+                doReturn(false).when(ioServiceMock).isDirectory(any());
+                doReturn(Optional.empty()).when(apiClientMock).getRepository(REPOSITORY_NAME);
+
+                assertThrows(InitializeException.class, () -> underTest.initialize(REPOSITORY_NAME,
+                        mock(Path.class), mock(Path.class)));
+            }
+
+            @Test
             void withApiCallFailingInitializeShouldFail() throws Exception {
                 doReturn(false).when(ioServiceMock).isDirectory(any());
                 doThrow(new IOException()).when(apiClientMock).getRepository(REPOSITORY_NAME);
@@ -162,7 +171,7 @@ class RepositoryServiceTest {
                         .setName(REPOSITORY_NAME);
 
                 doReturn(false).when(ioServiceMock).isDirectory(any());
-                doReturn(repository).when(apiClientMock).getRepository(REPOSITORY_NAME);
+                doReturn(Optional.of(repository)).when(apiClientMock).getRepository(REPOSITORY_NAME);
 
                 assertThrows(InitializeException.class, () -> underTest.initialize(REPOSITORY_NAME,
                         mock(Path.class), mock(Path.class)));
@@ -182,7 +191,7 @@ class RepositoryServiceTest {
                 repository.getTags().add(sourceTag);
 
                 doReturn(false).when(ioServiceMock).isDirectory(any());
-                doReturn(repository).when(apiClientMock).getRepository(REPOSITORY_NAME);
+                doReturn(Optional.of(repository)).when(apiClientMock).getRepository(REPOSITORY_NAME);
                 doReturn(true).when(validationServiceMock).validateChecksums(any(), any());
 
                 Repository result = underTest.initialize(REPOSITORY_NAME, Paths.get("."), mock(Path.class));
@@ -229,6 +238,13 @@ class RepositoryServiceTest {
         @Nested
         class WhenRefreshingGraph {
             @Test
+            void withApiClientNoResultShouldThrowIOException() throws Exception {
+                doReturn(Optional.empty()).when(apiClientMock).getRepository(any());
+
+                assertThrows(IOException.class, () -> underTest.refreshTagGraph(mock(Repository.class)));
+            }
+
+            @Test
             void withApiClientFailingShouldRethrow() throws Exception {
                 IOException exception = new IOException();
 
@@ -241,7 +257,7 @@ class RepositoryServiceTest {
 
             @Test
             void shouldPass() throws Exception {
-                doReturn(mock(Repository.class)).when(apiClientMock).getRepository(any());
+                doReturn(Optional.of(mock(Repository.class))).when(apiClientMock).getRepository(any());
                 PatchGraph patchGraphMock = mock(PatchGraph.class);
                 repositoryCacheItem.setPatchGraph(patchGraphMock);
 

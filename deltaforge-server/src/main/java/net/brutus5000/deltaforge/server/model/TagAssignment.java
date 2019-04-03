@@ -1,6 +1,8 @@
 package net.brutus5000.deltaforge.server.model;
 
+import com.yahoo.elide.annotation.Include;
 import lombok.Data;
+import net.brutus5000.deltaforge.api.dto.TagAssignmentDto;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -10,6 +12,7 @@ import java.util.UUID;
 
 @Entity
 @Data
+@Include(type = TagAssignmentDto.TYPE_NAME)
 public class TagAssignment implements UniqueEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

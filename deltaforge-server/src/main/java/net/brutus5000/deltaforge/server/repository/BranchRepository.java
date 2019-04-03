@@ -11,8 +11,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-@RepositoryRestResource(collectionResourceRel = "branches",
-        collectionResourceDescription = @Description("A branch of a repository"))
+@RepositoryRestResource(collectionResourceRel = "branchDtos",
+        collectionResourceDescription = @Description("A branchDto of a repository"))
 public interface BranchRepository extends JpaRepository<Branch, UUID> {
     Optional<Branch> findByRepositoryAndName(Repository repository, String name);
 

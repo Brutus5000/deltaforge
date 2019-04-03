@@ -1,4 +1,7 @@
-package net.brutus5000.deltaforge.client.api;
+package net.brutus5000.deltaforge.api.dto;
+
+import java.util.Objects;
+import java.util.Optional;
 
 public enum TagTypeDto {
     /**
@@ -26,4 +29,14 @@ public enum TagTypeDto {
      * Implication: Baseline tags need to be kept in original binary state until the .
      */
     INTERMEDIATE;
+
+    public static Optional<TagTypeDto> fromString(String tagType) {
+        for (TagTypeDto tagTypeDto : TagTypeDto.values()) {
+            if (Objects.equals(tagTypeDto.name(), tagType)) {
+                return Optional.of(tagTypeDto);
+            }
+        }
+
+        return Optional.empty();
+    }
 }

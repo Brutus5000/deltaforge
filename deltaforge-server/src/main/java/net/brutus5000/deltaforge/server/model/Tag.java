@@ -1,12 +1,15 @@
 package net.brutus5000.deltaforge.server.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.yahoo.elide.annotation.Include;
+import com.yahoo.elide.annotation.SharePermission;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
+import net.brutus5000.deltaforge.api.dto.TagDto;
 import net.brutus5000.deltaforge.patching.meta.validate.ValidateMetadata;
+import net.brutus5000.deltaforge.server.model.converter.ValidateMetadataConverter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -24,6 +27,8 @@ import java.util.UUID;
 @FieldNameConstants
 @EqualsAndHashCode(of = "id")
 @ToString(exclude = {"repository", "assignments"})
+@Include(type = TagDto.TYPE_NAME)
+@SharePermission
 public class Tag implements UniqueEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -45,7 +50,7 @@ public class Tag implements UniqueEntity {
     @Enumerated(EnumType.STRING)
     private TagType type;
 
-    @JsonRawValue
+    @Convert(converter = ValidateMetadataConverter.class)
     private ValidateMetadata validateMetadata;
 
     @Transient

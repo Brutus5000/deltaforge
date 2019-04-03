@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
 
-import static net.brutus5000.deltaforge.server.resthandler.ValidationBuilder.*;
+import static net.brutus5000.deltaforge.server.resthandler.ValidationBuilder.whenChanged;
 
 
 @Component
@@ -39,13 +39,6 @@ public class RepositoryEventHandler {
                         whenChanged(repository.getName(), preUpdate.getName()),
                         repositoryRepository::findByName, repository.getName(),
                         ErrorCode.REPOSITORY_NAME_IN_USE, repository.getName())
-                .conditionalAssertNotExists(
-                        and(
-                                whenChanged(repository.getGitUrl(), preUpdate.getGitUrl()),
-                                whenNotNull(repository.getGitUrl())
-                        ),
-                        repositoryRepository::findByGitUrl, repository.getGitUrl(),
-                        ErrorCode.REPOSITORY_GIT_URL_IN_USE, repository.getName())
                 .assertUnchanged(repository.getInitialBaseline(), preUpdate.getInitialBaseline(), ErrorCode.REPOSITORY_BASELINE_FIXED)
                 .validate();
     }

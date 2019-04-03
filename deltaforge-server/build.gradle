@@ -6,6 +6,7 @@ sourceCompatibility = '11'
 dependencies {
     // Spring Boot managed dependencies:
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+    compile "org.springframework.boot:spring-boot-starter-security"
     compile "org.springframework.boot:spring-boot-starter-data-rest"
     compile "org.springframework.boot:spring-boot-starter-data-jpa"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5"
@@ -14,7 +15,21 @@ dependencies {
     testCompile "org.springframework.boot:spring-boot-starter-test"
 
     // Standalone dependencies:
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+    implementation("org.mapstruct:mapstruct-jdk8:${mapstructVersion}")
+    implementation project(":deltaforge-api-dto")
     implementation project(":deltaforge-patching")
+    implementation "javax.inject:javax.inject:1"
+
+    compile("io.springfox:springfox-swagger-ui:${swaggerVersion}")
+    compile("io.springfox:springfox-swagger2:${swaggerVersion}")
+    compile("io.swagger:swagger-core:${swaggerCoreVersion}")
+
+
+    compile("com.yahoo.elide:elide-core:${elideVersion}")
+    compile("com.yahoo.elide:elide-swagger:${elideVersion}")
+    compile("com.yahoo.elide:elide-datastore-hibernate5:${elideVersion}")
+    
     compile "com.google.guava:guava:${guavaVersion}"
     compile "com.github.brutus5000:jbsdiff:${jbsdiffVersion}"
     compile "org.apache.commons:commons-compress:${apacheCommonsCompressVersion}"

@@ -95,6 +95,7 @@ public class RepositoryService {
 
         try {
             Repository repository = apiClient.getRepository(name)
+                    .orElseThrow(() -> new InitializeException("Repository not found on the server."))
                     .setMainDirectory(repositoryPath);
 
             Tag sourceTag = identifySourceTag(repository, sourceFolder)
@@ -117,7 +118,8 @@ public class RepositoryService {
 
     public void refreshTagGraph(Repository repository) throws IOException {
         log.debug("Reload remote repository: {}", repository);
-        Repository freshRepository = apiClient.getRepository(repository.getName());
+        Repository freshRepository = apiClient.getRepository(repository.getName())
+                .orElseThrow(() -> new IOException("Repository not found on the server."));
 
         repository.setGraph(freshRepository.getGraph());
         repositoryCache.get(repository).patchGraph.refreshGraph();

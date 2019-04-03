@@ -27,6 +27,7 @@ public class Repository {
 
     @JsonIgnore
     private Path mainDirectory;
+    private String id;
     private String name;
     private String currentTag;
     private Tag initialBaselineTag;

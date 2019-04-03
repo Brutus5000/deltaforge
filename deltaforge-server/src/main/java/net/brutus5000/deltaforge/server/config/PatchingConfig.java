@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class PatchingConfiguration {
+public class PatchingConfig {
     @Bean
     public Bsdiff4Service bsdiff4Service() {
         return new Bsdiff4Service();

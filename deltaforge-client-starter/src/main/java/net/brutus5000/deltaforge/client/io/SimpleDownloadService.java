@@ -1,5 +1,7 @@
 package net.brutus5000.deltaforge.client.io;
 
+import net.brutus5000.deltaforge.client.error.DownloadException;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -8,6 +10,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
 
+/**
+ * A simple download service.
+ */
 public class SimpleDownloadService implements DownloadService {
     private final HttpClient httpClient;
 

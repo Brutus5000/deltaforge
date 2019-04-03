@@ -1,8 +1,8 @@
 package net.brutus5000.deltaforge.server.api;
 
 import lombok.extern.slf4j.Slf4j;
+import net.brutus5000.deltaforge.api.dto.create.RepositoryCreate;
 import net.brutus5000.deltaforge.server.model.Repository;
-import net.brutus5000.deltaforge.server.model.RepositoryCreate;
 import net.brutus5000.deltaforge.server.resthandler.TagEventHandler;
 import org.springframework.data.rest.webmvc.PersistentEntityResourceAssembler;
 import org.springframework.data.rest.webmvc.RepositoryRestController;

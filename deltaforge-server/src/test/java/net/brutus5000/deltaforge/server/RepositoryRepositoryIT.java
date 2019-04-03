@@ -1,9 +1,9 @@
 package net.brutus5000.deltaforge.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.brutus5000.deltaforge.api.dto.create.RepositoryCreate;
 import net.brutus5000.deltaforge.server.error.ErrorCode;
 import net.brutus5000.deltaforge.server.model.Repository;
-import net.brutus5000.deltaforge.server.model.RepositoryCreate;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

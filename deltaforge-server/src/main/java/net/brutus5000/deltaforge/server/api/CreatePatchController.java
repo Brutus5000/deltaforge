@@ -2,7 +2,6 @@ package net.brutus5000.deltaforge.server.api;
 
 import lombok.extern.slf4j.Slf4j;
 import net.brutus5000.deltaforge.server.RepositoryService;
-import net.brutus5000.deltaforge.server.model.TagType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -24,11 +23,12 @@ public class CreatePatchController {
         this.repositoryService = repositoryService;
     }
 
-    @RequestMapping(path = "api/v1/branches/{branchId}/addTag", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(path = "action/branches/{branchId}/addTag", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void addTag(HttpServletRequest request, HttpServletResponse response,
-                       @PathVariable("branchId") UUID branchId, @RequestParam("tagId") UUID tagId, @RequestParam("tagType") String tagTypeString) {
-        repoService.addTagToBranch(branchId, tagId, TagType.parse(tagTypeString));
+                       @PathVariable("branchId") UUID branchId,
+                       @RequestParam("tagId") UUID tagId, @RequestParam("tagType") String tagTypeString) {
+        repoService.addTagToBranch(branchId, tagId, tagTypeString);
     }
 
 //    //@ApiOperation("Registers a new account that needs to be activated.")
@@ -39,7 +39,7 @@ public class CreatePatchController {
 //        return repositoryService.addRepository(name, gitUrl);
 //    }
 //
-//    @RequestMapping(path = "/{repositoryId}/branches", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+//    @RequestMapping(path = "/{repositoryId}/branchDtos", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 //    public List<Branch> getBranches(HttpServletRequest request, HttpServletResponse response,
 //                                    @RequestParam("repositoryId") UUID repositoryId) {
 //        // https://stackoverflow.com/questions/20366304/bind-uuid-in-spring-mvc
@@ -47,7 +47,7 @@ public class CreatePatchController {
 //    }
 //
 //    //@ApiOperation("Registers a new account that needs to be activated.")
-//    @RequestMapping(path = "/{repositoryId}/branches", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+//    @RequestMapping(path = "/{repositoryId}/branchDtos", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 //    public Branch addBranch(HttpServletRequest request, HttpServletResponse response,
 //                            @RequestParam("repositoryId") UUID repositoryId,
 //                            @RequestParam("name") String name,
@@ -56,7 +56,7 @@ public class CreatePatchController {
 //        return repositoryService.addBranch(repositoryId, name, initialBaselineTagId, gitBranch);
 //    }
 //
-//    @RequestMapping(path = "/{repositoryId}/branches", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+//    @RequestMapping(path = "/{repositoryId}/branchDtos", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 //    public List<Branch> getTags(HttpServletRequest request, HttpServletResponse response,
 //                                @RequestParam("repositoryId") UUID repositoryId) {
 //        // https://stackoverflow.com/questions/20366304/bind-uuid-in-spring-mvc
