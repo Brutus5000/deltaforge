@@ -68,13 +68,12 @@ public class PatchTaskV1IT {
         ioService = new IoService();
         instance = new PatchTaskV1(
                 bsdiff4Service,
-                ioService, rootSourceFolder,
+                ioService,
+                rootSourceFolder,
                 rootInitialBaselineFolder,
                 rootTargetFolder,
                 rootPatchFolder,
-                "testRepository",
-                "fromTag",
-                "toTag"
+                "testRepository"
         );
 
         if (Files.isDirectory(rootPatchFolder)) {
@@ -84,7 +83,7 @@ public class PatchTaskV1IT {
 
     @Test
     void testCompare() throws Exception {
-        PatchMetadata metadata = instance.compare();
+        PatchMetadata metadata = instance.compare("fromTag", "toTag");
 
         assertAll("metadata",
                 () -> assertEquals(1, metadata.getProtocol()),

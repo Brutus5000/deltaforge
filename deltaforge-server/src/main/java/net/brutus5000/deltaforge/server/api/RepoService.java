@@ -31,18 +31,18 @@ public class RepoService {
     private final ApiDtoMapper apiDtoMapper;
     private final DeltaforgeServerProperties properties;
     private final RepositoryRepository repositoryRepository;
-    private final BranchRepository branchRepository;
+    private final ChannelRepository channelRepository;
     private final PatchTaskRepository patchTaskRepository;
     private final TagRepository tagRepository;
     private final TagAssignmentRepository tagAssignmentRepository;
     private final PatchRepository patchRepository;
     private final FileService fileService;
 
-    public RepoService(ApiDtoMapper apiDtoMapper, DeltaforgeServerProperties properties, RepositoryRepository repositoryRepository, BranchRepository branchRepository, PatchTaskRepository patchTaskRepository, TagRepository tagRepository, TagAssignmentRepository tagAssignmentRepository, PatchRepository patchRepository, FileService fileService) {
+    public RepoService(ApiDtoMapper apiDtoMapper, DeltaforgeServerProperties properties, RepositoryRepository repositoryRepository, ChannelRepository channelRepository, PatchTaskRepository patchTaskRepository, TagRepository tagRepository, TagAssignmentRepository tagAssignmentRepository, PatchRepository patchRepository, FileService fileService) {
         this.apiDtoMapper = apiDtoMapper;
         this.properties = properties;
         this.repositoryRepository = repositoryRepository;
-        this.branchRepository = branchRepository;
+        this.channelRepository = channelRepository;
         this.patchTaskRepository = patchTaskRepository;
         this.tagRepository = tagRepository;
         this.tagAssignmentRepository = tagAssignmentRepository;
@@ -112,9 +112,15 @@ public class RepoService {
     }
 
     @Transactional
-    public void addTagToBranch(@NonNull UUID branchId, @NonNull UUID tagId, @NonNull String tagTypeName) {
-        Branch branch = branchRepository.findById(branchId)
-                .orElseThrow(() -> ApiException.of(ErrorCode.BRANCH_NOT_FOUND, branchId));
+    public void addTagToChannel(@NonNull UUID channelId, @NonNull UUID tagId, @NonNull String tagTypeName) {
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> ApiException.of(ErrorCode.CHANNEL_NOT_FOUND, channelId));
+
+        Tag initialBaselineTag = channel.getRepository().getInitialBaseline();
+
+        if (initialBaselineTag == null) {
+            throw ApiException.of(ErrorCode.REPOSITORY_BASELINE_MISSING, channel.getRepository().getName());
+        }
 
         Tag tag = tagRepository.findById(tagId)
                 .orElseThrow(() -> ApiException.of(ErrorCode.TAG_NOT_FOUND, tagId.toString()));
@@ -124,31 +130,30 @@ public class RepoService {
 
         TagType tagType = apiDtoMapper.map(tagTypeDto);
 
-        Optional<TagAssignment> existingAssignment = tagAssignmentRepository.findByBranchAndTag(branch, tag);
+        Optional<TagAssignment> existingAssignment = tagAssignmentRepository.findByChannelAndTag(channel, tag);
         if (existingAssignment.isPresent()) {
-            throw ApiException.of(ErrorCode.TAG_ALREADY_ASSIGNED, tag.getId().toString(), branch.getId());
+            throw ApiException.of(ErrorCode.TAG_ALREADY_ASSIGNED, tag.getId().toString(), channel.getId());
         }
 
         TagAssignment tagAssignment = new TagAssignment()
-                .setBranch(branch)
+                .setChannel(channel)
                 .setTag(tag);
 
-        log.debug("Creating tag assignment for branchDto id '{}': {}", branchId, tagAssignment);
+        log.debug("Creating tag assignment for channelDto id '{}': {}", channelId, tagAssignment);
         tagAssignmentRepository.save(tagAssignment);
 
-        Tag initialBaselineTag = branch.getRepository().getInitialBaseline();
-
+        // TODO: Needs to implement patching strategy
         if (tagType == TagType.SOURCE) {
-            enqueuePatch(initialBaselineTag, branch.getCurrentBaseline(), tag, false);
-            enqueuePatch(initialBaselineTag, tag, branch.getCurrentBaseline(), false);
+            enqueuePatch(initialBaselineTag, channel.getCurrentBaseline(), tag, false);
+            enqueuePatch(initialBaselineTag, tag, channel.getCurrentBaseline(), false);
         } else {
-            enqueuePatch(initialBaselineTag, branch.getCurrentTag(), tag, true);
-            enqueuePatch(initialBaselineTag, tag, branch.getCurrentTag(), false);
+            enqueuePatch(initialBaselineTag, channel.getCurrentTag(), tag, true);
+            enqueuePatch(initialBaselineTag, tag, channel.getCurrentTag(), false);
         }
 
-        log.debug("Updating branchDto '{}' current tag to: {}", branch, tag);
-        branch.setCurrentTag(tag);
-        branchRepository.save(branch);
+        log.debug("Updating channelDto '{}' current tag to: {}", channel, tag);
+        channel.setCurrentTag(tag);
+        channelRepository.save(channel);
     }
 
     @EventListener
@@ -170,10 +175,10 @@ public class RepoService {
     }
 
     private void checkForBaselinePromotion(@NonNull BidirectionalDijkstraShortestPath<Tag, Patch> shortestPathAlgorithm, @NonNull Patch patch) {
-        Set<Branch> affectedBranches = branchRepository.findAllByCurrentTag(patch.getTo());
+        Set<Channel> affectedChannels = channelRepository.findAllByCurrentTag(patch.getTo());
 
-        for (Branch branch : affectedBranches) {
-            GraphPath<Tag, Patch> path = shortestPathAlgorithm.getPath(branch.getCurrentBaseline(), patch.getTo());
+        for (Channel channel : affectedChannels) {
+            GraphPath<Tag, Patch> path = shortestPathAlgorithm.getPath(channel.getCurrentBaseline(), patch.getTo());
 
             if (path.getWeight() > properties.getBaselineFilesizeThreshold()) {
                 log.debug("Patch path filesize '{}' exceeds initialBaseline threshold of '{}'.", path.getWeight(), properties.getBaselineFilesizeThreshold());
@@ -198,12 +203,12 @@ public class RepoService {
             enqueuePatch(initialBaselineTag, tag, baseline, false);
         }
 
-        Set<Branch> patchedBranches = branchRepository.findAllByCurrentTag(tag);
-        for (Branch branch : patchedBranches) {
-            branch.setCurrentBaseline(tag);
+        Set<Channel> patchedChannels = channelRepository.findAllByCurrentTag(tag);
+        for (Channel channel : patchedChannels) {
+            channel.setCurrentBaseline(tag);
         }
 
-        branchRepository.saveAll(patchedBranches);
+        channelRepository.saveAll(patchedChannels);
     }
 
     @EventListener

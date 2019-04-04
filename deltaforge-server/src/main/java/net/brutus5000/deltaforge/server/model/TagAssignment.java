@@ -23,7 +23,7 @@ public class TagAssignment implements UniqueEntity {
     private OffsetDateTime updatedAt;
     @ManyToOne
     @JoinColumn(nullable = false)
-    private Branch branch;
+    private Channel channel;
     @ManyToOne
     @JoinColumn(nullable = false)
     private Tag tag;

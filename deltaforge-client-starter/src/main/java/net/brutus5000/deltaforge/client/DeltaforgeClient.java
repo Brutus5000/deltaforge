@@ -56,8 +56,8 @@ public class DeltaforgeClient {
 
     }
 
-    public void checkoutLatest(@NotNull Repository repository, @NotNull String branch) throws CheckoutException {
-        log.info("Checking out latest tag of branch `{}` from repository `{}`", branch, repository);
+    public void checkoutLatest(@NotNull Repository repository, @NotNull String channel) throws CheckoutException {
+        log.info("Checking out latest tag of channel `{}` from repository `{}`", channel, repository);
 
         try {
             repositoryService.refreshTagGraph(repository);
@@ -65,10 +65,10 @@ public class DeltaforgeClient {
             throw new CheckoutException("Refreshing of tag patchGraph failed: " + e.getMessage(), e);
         }
 
-        Tag latestTag = repository.getLatestTag(branch)
+        Tag latestTag = repository.getLatestTag(channel)
                 .orElseThrow(() -> new CheckoutException(
-                        MessageFormat.format("Latest tag for branch `{0}` in repository `{1}` not found.",
-                                branch, repository)));
+                        MessageFormat.format("Latest tag for channel `{0}` in repository `{1}` not found.",
+                                channel, repository)));
 
         checkoutTag(repository, latestTag.getName());
     }

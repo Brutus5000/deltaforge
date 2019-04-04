@@ -37,16 +37,16 @@ public class FileService {
     private final ObjectMapper objectMapper;
     private final DeltaforgeServerProperties properties;
     private final RepositoryRepository repositoryRepository;
-    private final BranchRepository branchRepository;
+    private final ChannelRepository channelRepository;
     private final TagRepository tagRepository;
     private final TagAssignmentRepository tagAssignmentRepository;
     private final PatchTaskRepository patchTaskRepository;
 
-    public FileService(ObjectMapper objectMapper, DeltaforgeServerProperties properties, RepositoryRepository repositoryRepository, BranchRepository branchRepository, TagRepository tagRepository, TagAssignmentRepository tagAssignmentRepository, PatchTaskRepository patchTaskRepository) {
+    public FileService(ObjectMapper objectMapper, DeltaforgeServerProperties properties, RepositoryRepository repositoryRepository, ChannelRepository channelRepository, TagRepository tagRepository, TagAssignmentRepository tagAssignmentRepository, PatchTaskRepository patchTaskRepository) {
         this.objectMapper = objectMapper;
         this.properties = properties;
         this.repositoryRepository = repositoryRepository;
-        this.branchRepository = branchRepository;
+        this.channelRepository = channelRepository;
         this.tagRepository = tagRepository;
         this.tagAssignmentRepository = tagAssignmentRepository;
         this.patchTaskRepository = patchTaskRepository;
@@ -81,7 +81,7 @@ public class FileService {
         }
     }
 
-    public void createBranch(@NonNull UUID repositoryId, @NonNull String name, @NonNull UUID baseTagId) {
+    public void createChannel(@NonNull UUID repositoryId, @NonNull String name, @NonNull UUID baseTagId) {
         Repository repository = repositoryRepository.findById(repositoryId)
                 .orElseThrow(() -> ApiException.of(ErrorCode.REPOSITORY_NOT_FOUND, repositoryId));
 
@@ -92,46 +92,46 @@ public class FileService {
             throw ApiException.of(ErrorCode.STRING_IS_EMPTY, name);
         }
 
-        branchRepository.findByRepositoryAndName(repository, name)
-                .ifPresent(branch -> {
-                    throw ApiException.of(ErrorCode.BRANCH_NAME_IN_USE, branch.getName());
+        channelRepository.findByRepositoryAndName(repository, name)
+                .ifPresent(channel -> {
+                    throw ApiException.of(ErrorCode.CHANNEL_NAME_IN_USE, channel.getName());
                 });
 
-        Branch newBranch = new Branch()
+        Channel newChannel = new Channel()
                 .setRepository(repository)
                 .setName(name)
                 .setCurrentBaseline(baseTag)
                 .setCurrentTag(baseTag);
 
-        log.info("Creating new branchDto: {}", newBranch);
-        branchRepository.save(newBranch);
+        log.info("Creating new channel: {}", newChannel);
+        channelRepository.save(newChannel);
 
         TagAssignment tagAssignment = new TagAssignment()
-                .setBranch(newBranch)
+                .setChannel(newChannel)
                 .setTag(baseTag);
 
-        log.debug("Creating tag assignment for new branchDto id '{}': {}", newBranch.getId(), tagAssignment);
+        log.debug("Creating tag assignment for new channel id '{}': {}", newChannel.getId(), tagAssignment);
         tagAssignmentRepository.save(tagAssignment);
     }
 
-    public void addSourceTagToBranch(@NonNull UUID branchId, @NonNull UUID sourceTagId) {
-        Branch branch = branchRepository.findById(branchId)
-                .orElseThrow(() -> ApiException.of(ErrorCode.BRANCH_NOT_FOUND, branchId));
+    public void addSourceTagToChannel(@NonNull UUID channelId, @NonNull UUID sourceTagId) {
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> ApiException.of(ErrorCode.CHANNEL_NOT_FOUND, channelId));
 
         Tag sourceTag = tagRepository.findById(sourceTagId)
                 .orElseThrow(() -> ApiException.of(ErrorCode.TAG_NOT_FOUND, sourceTagId));
 
         TagAssignment tagAssignment = new TagAssignment()
-                .setBranch(branch)
+                .setChannel(channel)
                 .setTag(sourceTag);
 
-        log.debug("Creating tag assignment for branchDto id '{}': {}", branch.getId(), tagAssignment);
+        log.debug("Creating tag assignment for channelDto id '{}': {}", channel.getId(), tagAssignment);
         tagAssignmentRepository.save(tagAssignment);
 
         PatchTask patchTask = new PatchTask()
                 .setStatus(TaskStatus.PENDING)
                 .setFrom(sourceTag)
-                .setTo(branch.getRepository().getInitialBaseline());
+                .setTo(channel.getRepository().getInitialBaseline());
 
         log.debug("Creating patch task: {}", patchTask);
         patchTaskRepository.save(patchTask);

@@ -40,11 +40,11 @@ public class RepositoryService {
 //
 //    Tag createTagFromGitCommit(@NotNull UUID repositoryId, @NotNull String name, @NotNull String gitCommitId);
 //
-//    List<Branch> getBranches(@NotNull UUID repositoryId);
+//    List<Channel> getChannels(@NotNull UUID repositoryId);
 //
-//    Branch addBranch(@NotNull UUID repositoryId, @NotNull String name, @NotNull UUID initialBaselineTagId, @Nullable String gitBranch);
+//    Channel addChannel(@NotNull UUID repositoryId, @NotNull String name, @NotNull UUID initialBaselineTagId, @Nullable String gitBranch);
 //
-//    Tag addTagToBranch(@NotNull Branch branch, @NotNull Tag tag, @NotNull TagType type);
+//    Tag addTagToChannel(@NotNull Channel channel, @NotNull Tag tag, @NotNull TagType type);
 //
 //    Patch[] findPatchPath(@NotNull Tag from, @NotNull Tag to);
 }

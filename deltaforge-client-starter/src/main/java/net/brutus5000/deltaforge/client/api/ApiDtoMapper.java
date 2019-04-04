@@ -13,7 +13,7 @@ import org.mapstruct.Mapper;
 public interface ApiDtoMapper {
     Repository map(RepositoryDto repositoryDto);
 
-    BranchDto map(BranchDto branchDto);
+    ChannelDto map(ChannelDto channelDto);
 
     Patch map(PatchDto patchDto);
 

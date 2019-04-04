@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.yahoo.elide.annotation.Include;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import net.brutus5000.deltaforge.api.dto.BranchDto;
+import lombok.ToString;
+import net.brutus5000.deltaforge.api.dto.ChannelDto;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -13,20 +14,15 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
- * A branchDto tracks the development of a repository in a certain direction.
- * <p>
- * Branches are required to manage multiple parallel initialBaseline versions. However, it does not limit the clients ability
- * to apply patches across branchDtos.
- * <p>
- * Multiple parallel initialBaseline versions are required when the underlying repository is not just moving forward in one
- * direction. Example: After release of version 1.0 and it's successor 2.0, there is a bugfix version 1.1 that should
- * not be built upon 1.0 (again) instead of 2.0.
+ * A channel represent different versioning concepts (e.g. unstable / testing / stable).
+ * It always points to the latest tag available.
  */
 @Entity
 @Data
-@EqualsAndHashCode(of = "id")
-@Include(type = BranchDto.TYPE_NAME)
-public class Branch implements UniqueEntity {
+@EqualsAndHashCode(of = {"id", "name"})
+@ToString(of = {"id", "name", "currentTag"})
+@Include(type = ChannelDto.TYPE_NAME)
+public class Channel implements UniqueEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;

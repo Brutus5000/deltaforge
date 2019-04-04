@@ -83,7 +83,7 @@ public class DataController {
             consumes = {JSON_API_MEDIA_TYPE, MediaType.APPLICATION_JSON_VALUE},
             produces = JSON_API_MEDIA_TYPE,
             value = {"/{entity}/{id}", "/{entity}/{id}/relationships/{entity2}"})
-    @PreAuthorize("isAuthenticated()")
+//    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<String> patch(@RequestBody final String body,
                                         final HttpServletRequest request,
                                         final Authentication authentication) {

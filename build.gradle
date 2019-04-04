@@ -28,7 +28,7 @@ subprojects {
 
         testImplementation "org.junit.jupiter:junit-jupiter-api"
         testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
-        testCompileOnly "org.mockito:mockito-junit-jupiter"
+        testCompile "org.mockito:mockito-junit-jupiter"
 
 
 //        testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")

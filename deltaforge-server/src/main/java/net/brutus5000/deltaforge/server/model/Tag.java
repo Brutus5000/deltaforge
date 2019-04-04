@@ -47,10 +47,6 @@ public class Tag implements UniqueEntity {
     @Column(unique = true, nullable = false)
     private String name;
 
-    private String gitTagName;
-
-    private String gitCommitId;
-
     @OneToMany(mappedBy = "tag")
     private Set<TagAssignment> assignments = new HashSet<>();
 

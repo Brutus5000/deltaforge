@@ -9,6 +9,6 @@ public class TagAssignment {
     private String id;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
-    private Branch branch;
+    private Channel channel;
     private Tag tag;
 }

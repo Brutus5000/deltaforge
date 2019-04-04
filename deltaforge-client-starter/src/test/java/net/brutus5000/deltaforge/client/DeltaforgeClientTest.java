@@ -42,6 +42,7 @@ class DeltaforgeClientTest {
     private RepositoryService repositoryService;
 
     private DeltaforgeClient underTest;
+    public static final String CHANNEL_NAME = "myChannel";
 
     @BeforeEach
     void beforeEach() throws Exception {
@@ -113,29 +114,27 @@ class DeltaforgeClientTest {
 
     @Test
     void checkoutLatestIOException() throws Exception {
-        final String BRANCH_NAME = "myBranch";
         final String EXCEPTION_MESSAGE = "someMessage";
 
         doThrow(new CheckoutException(EXCEPTION_MESSAGE, null)).when(repositoryService).refreshTagGraph(any());
 
         Repository repository = new Repository();
 
-        CheckoutException checkoutException = assertThrows(CheckoutException.class, () -> underTest.checkoutLatest(repository, BRANCH_NAME));
+        CheckoutException checkoutException = assertThrows(CheckoutException.class, () -> underTest.checkoutLatest(repository, CHANNEL_NAME));
 
         assertThat(checkoutException.getMessage(), is(EXCEPTION_MESSAGE));
     }
 
     @Test
     void checkoutLatestSuccess() throws Exception {
-        final String BRANCH_NAME = "myBranch";
         final String TAG_NAME = "myTag";
 
         Repository repository = mock(Repository.class);
-        doReturn(Optional.of(new Tag().setName(TAG_NAME))).when(repository).getLatestTag(BRANCH_NAME);
+        doReturn(Optional.of(new Tag().setName(TAG_NAME))).when(repository).getLatestTag(CHANNEL_NAME);
 
         doReturn(Lists.newArrayList(mock(Patch.class), mock(Patch.class))).when(repositoryService).calculatePatchPath(any(), anyString());
 
-        underTest.checkoutLatest(repository, BRANCH_NAME);
+        underTest.checkoutLatest(repository, CHANNEL_NAME);
 
         verify(repositoryService).refreshTagGraph(repository);
         verify(repositoryService).calculatePatchPath(repository, TAG_NAME);

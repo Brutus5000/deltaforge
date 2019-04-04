@@ -1,7 +1,7 @@
 package net.brutus5000.deltaforge.client;
 
 import net.brutus5000.deltaforge.client.model.Repository;
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ class DeltaforgeClientITCase {
     void contextLoads() {
     }
 
-    @Ignore("Only for manual testing when local repository is not loaded yet")
+    @Disabled("Only for manual testing when local repository is not loaded yet")
     @Test
     void testLoadRepository() throws Exception {
         Optional<Repository> repositoryOptional = deltaforgeClient.loadRepository("myRepo");
@@ -34,7 +34,7 @@ class DeltaforgeClientITCase {
         assertThat(repositoryOptional.isPresent(), is(false));
     }
 
-    @Ignore("Only for manual testing")
+    @Disabled("Only for manual testing")
     @Test
     void testAddRepository() throws Exception {
         Repository repository = deltaforgeClient.addRepository("myRepo",

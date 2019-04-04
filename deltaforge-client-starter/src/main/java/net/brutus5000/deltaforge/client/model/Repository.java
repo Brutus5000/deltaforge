@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
+import lombok.ToString;
 
 import java.net.URL;
 import java.nio.file.Path;
@@ -15,7 +16,8 @@ import java.util.Optional;
 import java.util.Set;
 
 @Data
-@EqualsAndHashCode(of = "name")
+@EqualsAndHashCode(of = {"id", "name"})
+@ToString(of = {"id", "name"})
 public class Repository {
     public static final String DELTAFORGE_CURRENT_TAG_FOLDER = "currentTag";
     public static final String DELTAFORGE_INITIAL_BASELINE_FOLDER = "initialBaseline";
@@ -33,8 +35,8 @@ public class Repository {
     private Integer protocolVersion;
     private String url;
     private String strategy;
-    @JsonManagedReference("branches")
-    private Set<Branch> branches = new HashSet<>();
+    @JsonManagedReference("channels")
+    private Set<Channel> channels = new HashSet<>();
     @JsonManagedReference("tags")
     private Set<Tag> tags = new HashSet<>();
     @JsonManagedReference("patches")
@@ -78,15 +80,15 @@ public class Repository {
                 MessageFormat.format(DELTAFORGE_PATCH_FILE_PATTERN, fromVersion, toVersion));
     }
 
-    public Optional<Branch> getBranch(String name) {
-        return branches.parallelStream()
-                .filter(branch -> Objects.equals(branch.getName(), name))
+    public Optional<Channel> getChannel(String name) {
+        return channels.parallelStream()
+                .filter(channel -> Objects.equals(channel.getName(), name))
                 .findAny();
     }
 
-    public Optional<Tag> getLatestTag(String branchName) {
-        return getBranch(branchName)
-                .map(Branch::getCurrentTag);
+    public Optional<Tag> getLatestTag(String channelName) {
+        return getChannel(channelName)
+                .map(Channel::getCurrentTag);
     }
 
     public Optional<Tag> findTagByName(String name) {

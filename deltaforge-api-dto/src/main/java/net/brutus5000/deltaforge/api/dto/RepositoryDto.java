@@ -7,7 +7,6 @@ import com.github.jasminb.jsonapi.annotations.Type;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
 import java.time.OffsetDateTime;
 import java.util.HashSet;
@@ -19,9 +18,8 @@ import static net.brutus5000.deltaforge.api.dto.RepositoryDto.TYPE_NAME;
  * A repository represents a set (technically: a folder) of binary files under binary version control.
  */
 @Data
-@Slf4j
 @EqualsAndHashCode(of = {"id", "name"})
-@ToString(exclude = {"branches", "tags", "patches"})
+@ToString(of = {"id", "name"})
 @Type(TYPE_NAME)
 public class RepositoryDto {
     public static final String TYPE_NAME = "repository";
@@ -37,9 +35,9 @@ public class RepositoryDto {
 
     private String folderPath;
 
-    @Relationship("branches")
-    @JsonManagedReference("branchParent")
-    private Set<BranchDto> branches = new HashSet<>();
+    @Relationship("channels")
+    @JsonManagedReference("channelParent")
+    private Set<ChannelDto> channels = new HashSet<>();
 
     @Relationship("tags")
     @JsonManagedReference("tagParent")

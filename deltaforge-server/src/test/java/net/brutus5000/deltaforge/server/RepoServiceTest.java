@@ -31,7 +31,7 @@ class RepoServiceTest {
     @Mock
     private RepositoryRepository repositoryRepository;
     @Mock
-    private BranchRepository branchRepository;
+    private ChannelRepository channelRepository;
     @Mock
     private PatchTaskRepository patchTaskRepository;
     @Mock
@@ -45,7 +45,7 @@ class RepoServiceTest {
     RepoService repoService;
 
     private Repository repository;
-    private Branch branch;
+    private Channel channel;
     private Tag tag;
     @Mock
     private PatchGraph repositoryGraph;
@@ -57,7 +57,7 @@ class RepoServiceTest {
                 .setPatchGraph(repositoryGraph)
                 .setInitialBaseline(new Tag().setName("initialBaseline"));
 
-        branch = new Branch()
+        channel = new Channel()
                 .setId(UUID.randomUUID())
                 .setRepository(repository);
 
@@ -100,18 +100,18 @@ class RepoServiceTest {
                     .setRepository(repository);
 
             when(tagRepository.findAllByRepositoryAndType(repository, TagType.BASELINE)).thenReturn(Set.of(tag));
-            when(branchRepository.findAllByCurrentTag(newTag)).thenReturn(Set.of(branch));
+            when(channelRepository.findAllByCurrentTag(newTag)).thenReturn(Set.of(channel));
 
             repoService.upgradeTagToBaseline(newTag);
 
             verify(patchTaskRepository, times(2)).save(any());
-            final ArgumentCaptor<Set<Branch>> captor = ArgumentCaptor.forClass(Set.class);
-            verify(branchRepository).saveAll(captor.capture());
+            final ArgumentCaptor<Set<Channel>> captor = ArgumentCaptor.forClass(Set.class);
+            verify(channelRepository).saveAll(captor.capture());
 
-            Set<Branch> allSaved = captor.getValue();
+            Set<Channel> allSaved = captor.getValue();
             assertThat(allSaved.size(), is(1));
-            assertThat(allSaved, contains(branch));
-            assertThat(branch.getCurrentBaseline(), is(newTag));
+            assertThat(allSaved, contains(channel));
+            assertThat(channel.getCurrentBaseline(), is(newTag));
         }
     }
 }

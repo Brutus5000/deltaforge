@@ -26,7 +26,7 @@ import java.util.UUID;
 @Data
 @Slf4j
 @EqualsAndHashCode(of = "id")
-@ToString(exclude = {"branches", "tags", "patches", "patchGraph"})
+@ToString(exclude = {"channels", "tags", "patches", "patchGraph"})
 @Include(rootLevel = true, type = RepositoryDto.TYPE_NAME)
 public class Repository implements UniqueEntity {
     @Id
@@ -45,7 +45,7 @@ public class Repository implements UniqueEntity {
     private Tag initialBaseline;
     @OneToMany(mappedBy = "repository")
     @JsonManagedReference
-    private Set<Branch> branches = new HashSet<>();
+    private Set<Channel> channels = new HashSet<>();
     @OneToMany(mappedBy = "repository")
     private Set<Tag> tags = new HashSet<>();
     @OneToMany(mappedBy = "repository")

@@ -22,7 +22,7 @@ import static net.brutus5000.deltaforge.api.dto.TagDto.TYPE_NAME;
 @Data
 @FieldNameConstants
 @EqualsAndHashCode(of = {"id", "name"})
-@ToString(exclude = {"repository", "assignments"})
+@ToString(of = {"id", "name"})
 @Type(TYPE_NAME)
 public class TagDto {
     public static final String TYPE_NAME = "tag";

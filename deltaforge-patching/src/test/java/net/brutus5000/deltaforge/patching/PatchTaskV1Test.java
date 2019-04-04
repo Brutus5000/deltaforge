@@ -56,9 +56,7 @@ class PatchTaskV1Test {
                 rootInitialBaselineFolder,
                 rootTargetFolder,
                 rootPatchFolder,
-                "testRepository",
-                "fromTag",
-                "toTag"
+                "testRepository"
         );
 
         if (Files.isDirectory(rootPatchFolder)) {

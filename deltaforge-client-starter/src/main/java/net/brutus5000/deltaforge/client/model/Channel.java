@@ -2,20 +2,22 @@ package net.brutus5000.deltaforge.client.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.time.OffsetDateTime;
 
 /**
- * A branch tracks the development of a repository in a certain direction.
- * <p>
- * Branches are required to maintain multiple release tracks. Example: After release of version 1.0 and it's successor
- * 2.0, there is a bugfix version 1.1 that should be built upon 1.0 (again) instead of 2.0.
+ * A channel represent different versioning concepts (e.g. unstable / testing / stable).
+ * It always points to the latest tag available.
  */
 @Data
-public class Branch {
+@EqualsAndHashCode(of = {"id", "name"})
+@ToString(of = {"id", "name", "currentTag"})
+public class Channel {
     private String id;
     private String name;
-    @JsonBackReference("branches")
+    @JsonBackReference("channels")
     private Repository repository;
     private Tag currentTag;
     private OffsetDateTime createdAt;

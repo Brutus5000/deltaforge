@@ -3,6 +3,7 @@ package net.brutus5000.deltaforge.server.api;
 import net.brutus5000.deltaforge.api.dto.*;
 import net.brutus5000.deltaforge.server.model.*;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,15 +18,17 @@ public interface ApiDtoMapper {
         return UUID.fromString(uuidString);
     }
 
+    @Mapping(target = "patchGraph", ignore = true)
     RepositoryDto map(Repository repository);
 
+    @Mapping(target = "patchGraph", ignore = true)
     Repository map(RepositoryDto repositoryDto);
 
     List<RepositoryDto> map(List<Repository> repositoryList);
 
-    BranchDto map(Branch branch);
+    ChannelDto map(Channel channel);
 
-    Branch map(BranchDto branchDto);
+    Channel map(ChannelDto channelDto);
 
     PatchDto map(Patch patch);
 

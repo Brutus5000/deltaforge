@@ -11,19 +11,19 @@ public enum TagType {
      */
     SOURCE,
     /**
-     * A initialBaseline tag references a stable state (not to be confused that is a basis to create delta patches from.
-     * New baselines are created after a defined amount of delta patches or when the overall size of all delta patches
-     * from the last baselines exceeds a defined threshold.
+     * A baseline tag is a special marker of a stable tag. New baselines are created after a defined amount of
+     * intermediate patches or when the overall size of all delta patches from the last baselines exceeds a defined
+     * threshold.
      * <p>
      * Implication: Baseline tags need to be kept in original binary state, to be able to create new delta patches to
-     * it's intermediate tags or all other initialBaseline tags.
+     * it's intermediate tags and all other baseline tags.
      */
     BASELINE,
     /**
-     * An intermediate tag references a stable state that has only a tiny delta to the parent initialBaseline version.
-     * Intermediate tags can follow on initialBaseline or other intermediate tags.
+     * An intermediate tag references a stable state that has only a tiny delta to the parent baseline version.
+     * Intermediate tags can follow on baseline tags or other intermediate tags.
      * <p>
-     * Implication: Baseline tags need to be kept in original binary state until the .
+     * Implication: intermediate tags need to be kept in original binary state until the next baseline tag is created.
      */
     INTERMEDIATE;
 }

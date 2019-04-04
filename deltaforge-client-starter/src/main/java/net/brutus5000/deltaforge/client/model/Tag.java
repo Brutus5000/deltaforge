@@ -2,8 +2,8 @@ package net.brutus5000.deltaforge.client.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import lombok.experimental.FieldNameConstants;
 import net.brutus5000.deltaforge.patching.meta.validate.ValidateMetadata;
 
 import java.time.OffsetDateTime;
@@ -14,8 +14,8 @@ import java.util.Set;
  * A tag references a defined state of a repository.
  */
 @Data
-@FieldNameConstants
-@ToString(exclude = {"repository", "assignments"})
+@EqualsAndHashCode(of = {"id", "name"})
+@ToString(of = {"id", "name"})
 public class Tag {
     private String id;
     private OffsetDateTime createdAt;
@@ -23,8 +23,6 @@ public class Tag {
     @JsonBackReference("tags")
     private Repository repository;
     private String name;
-    private String gitTagName;
-    private String gitCommitId;
     private Set<TagAssignment> assignments = new HashSet<>();
     private TagType type;
 

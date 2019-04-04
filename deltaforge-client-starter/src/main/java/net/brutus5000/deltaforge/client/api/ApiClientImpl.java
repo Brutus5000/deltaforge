@@ -16,7 +16,7 @@ import java.util.Optional;
 @Slf4j
 public class ApiClientImpl implements ApiClient {
     private final static String JSONAPI_PREFIX = "/data";
-    private final static String REPOSITORY_QUERY = "/repository?include=branches,tags,patches&filter=name==\"%s\"";
+    private final static String REPOSITORY_QUERY = "/repository?include=channels,tags,patches&filter=name==\"%s\"";
 
     private final RestTemplate restTemplate;
     private final DeltaforgeClientProperties properties;
