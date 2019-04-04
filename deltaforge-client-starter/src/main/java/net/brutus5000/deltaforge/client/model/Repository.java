@@ -31,7 +31,7 @@ public class Repository {
     private String id;
     private String name;
     private String currentTag;
-    private Tag initialBaselineTag;
+    private Tag initialBaseline;
     private Integer protocolVersion;
     private String url;
     private String strategy;

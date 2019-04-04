@@ -1,6 +1,6 @@
 package net.brutus5000.deltaforge.api.dto;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.jasminb.jsonapi.annotations.Id;
 import com.github.jasminb.jsonapi.annotations.Relationship;
 import com.github.jasminb.jsonapi.annotations.Type;
@@ -35,7 +35,7 @@ public class TagDto {
     private OffsetDateTime updatedAt;
 
     @Relationship("repository")
-    @JsonBackReference("tagParent")
+    @JsonIgnore
     private RepositoryDto repository;
 
     private String name;

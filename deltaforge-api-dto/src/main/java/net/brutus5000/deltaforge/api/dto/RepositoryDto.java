@@ -1,5 +1,6 @@
 package net.brutus5000.deltaforge.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.github.jasminb.jsonapi.annotations.Id;
 import com.github.jasminb.jsonapi.annotations.Relationship;
@@ -35,12 +36,15 @@ public class RepositoryDto {
 
     private String folderPath;
 
+    @Relationship("initialBaseline")
+    private TagDto initialBaseline;
+
     @Relationship("channels")
-    @JsonManagedReference("channelParent")
+    @JsonIgnore
     private Set<ChannelDto> channels = new HashSet<>();
 
     @Relationship("tags")
-    @JsonManagedReference("tagParent")
+    @JsonIgnore
     private Set<TagDto> tags = new HashSet<>();
 
     @Relationship("patches")

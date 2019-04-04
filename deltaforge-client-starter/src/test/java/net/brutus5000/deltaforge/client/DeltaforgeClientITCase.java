@@ -19,6 +19,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SpringBootTest(classes = DeltaforgeClientTestApplication.class)
 @ActiveProfiles("integration")
 class DeltaforgeClientITCase {
+    public static final String REPO_NAME = "myRepo";
     @Autowired
     DeltaforgeClient deltaforgeClient;
 
@@ -29,7 +30,7 @@ class DeltaforgeClientITCase {
     @Disabled("Only for manual testing when local repository is not loaded yet")
     @Test
     void testLoadRepository() throws Exception {
-        Optional<Repository> repositoryOptional = deltaforgeClient.loadRepository("myRepo");
+        Optional<Repository> repositoryOptional = deltaforgeClient.loadRepository(REPO_NAME);
 
         assertThat(repositoryOptional.isPresent(), is(false));
     }
@@ -37,7 +38,14 @@ class DeltaforgeClientITCase {
     @Disabled("Only for manual testing")
     @Test
     void testAddRepository() throws Exception {
-        Repository repository = deltaforgeClient.addRepository("myRepo",
+        Repository repository = deltaforgeClient.addRepository(REPO_NAME,
                 Paths.get("out", "test-data", "source"));
+    }
+
+    @Disabled("Only for manual testing")
+    @Test
+    void testCheckoutLatest() throws Exception {
+        Repository repository = deltaforgeClient.loadRepository(REPO_NAME).get();
+        deltaforgeClient.checkoutLatest(repository, "develop");
     }
 }
