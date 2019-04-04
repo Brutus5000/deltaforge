@@ -47,7 +47,16 @@ class DeltaforgeClientITCase {
     void testCheckoutLatest() throws Exception {
         // I am using HFS to mount the /data folder to localhost
 
-        Repository repository = deltaforgeClient.loadRepository(REPO_NAME).get();
+        Optional<Repository> repositoryOptional = deltaforgeClient.loadRepository(REPO_NAME);
+        Repository repository;
+
+        if (repositoryOptional.isPresent()) {
+            repository = repositoryOptional.get();
+        } else {
+            repository = deltaforgeClient.addRepository(REPO_NAME,
+                    Paths.get("out", "test-data", "source"));
+        }
+
         deltaforgeClient.checkoutLatest(repository, "develop");
     }
 }

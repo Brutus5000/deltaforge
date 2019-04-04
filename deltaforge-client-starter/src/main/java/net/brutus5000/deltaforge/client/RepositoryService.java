@@ -161,7 +161,6 @@ public class RepositoryService {
             URL downloadURL = localRepository.getRemotePatchURL(patch.getFrom().getName(), patch.getTo().getName(), "zip");
             log.debug("Downloading patch file from: {}", downloadURL);
             downloadService.download(downloadURL, archiveDestination);
-
         }
 
         if (ioService.isFile(metadataDestination)) {
@@ -180,12 +179,13 @@ public class RepositoryService {
     public void applyPatch(Repository repository, Patch patch) {
         log.debug("Applying patch {} on repository {}", patch, repository);
         try {
+            Path sourceDirectory = repository.getMainDirectory().resolve(Repository.DELTAFORGE_CURRENT_TAG_FOLDER);
             Path patchDirectory = ioService.createTempDirectory("deltaforge_patch_");
             Path resultDirectory = ioService.createTempDirectory("deltaforge_patchresult_");
             Path baselineDirectory = repository.getInitialBaselineFolder();
 
             PatchRequest patchRequest = (PatchRequest) new PatchRequest()
-                    .setSourceFolder(repository.getMainDirectory().resolve(Repository.DELTAFORGE_CURRENT_TAG_FOLDER))
+                    .setSourceFolder(sourceDirectory)
                     .setPatchFolder(patchDirectory)
                     .setInitialBaselineFolder(baselineDirectory)
                     .setTargetFolder(resultDirectory)
@@ -201,6 +201,10 @@ public class RepositoryService {
 
             log.debug("Invoking patchService with PatchRequest: {}", patchRequest);
             patchService.applyPatch(patchRequest);
+
+            log.debug("Replacing current tag with patch results");
+            ioService.deleteDirectory(sourceDirectory);
+            ioService.moveDirectory(resultDirectory, sourceDirectory);
 
             log.debug("Setting current tag to: {}", patch.getTo().getName());
             repository.setCurrentTag(patch.getTo().getName());

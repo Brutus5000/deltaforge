@@ -355,6 +355,8 @@ class RepositoryServiceTest {
                 underTest.applyPatch(cachedRepository, patch);
 
                 verify(ioServiceMock, times(2)).createTempDirectory(any());
+                verify(ioServiceMock).deleteDirectory(any());
+                verify(ioServiceMock).moveDirectory(any(), any());
                 verify(ioServiceMock).unzip(any(), any());
                 verify(patchServiceMock).applyPatch(any());
             }

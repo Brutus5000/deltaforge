@@ -47,6 +47,10 @@ public class IoService {
         FileUtils.copyDirectory(from.toFile(), to.toFile());
     }
 
+    public void moveDirectory(@NonNull Path from, @NonNull Path to) throws IOException {
+        FileUtils.moveDirectory(from.toFile(), to.toFile());
+    }
+
     public void deleteQuietly(@NonNull Path path) {
         FileUtils.deleteQuietly(path.toFile());
     }

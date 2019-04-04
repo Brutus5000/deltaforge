@@ -30,6 +30,7 @@ import static org.mockito.Mockito.*;
 public class PatchTaskV1IT {
     private final static String FILENAME_UNCHANGED = "unchanged.txt";
     private final static String FILENAME_NEW = "new.txt";
+    private final static String FILENAME_COPY_FROM_INITIAL = "copy-from-initial.txt";
     private final static String FILENAME_REMOVED_FROM_SOURCE = "removed-from-source.txt";
     private final static String FILENAME_MODIFIED_FROM_SOURCE = "modified-from-source.txt";
     private final static String DIRECTORY_UNCHANGED = "unchanged-folder";
@@ -90,6 +91,7 @@ public class PatchTaskV1IT {
                 () -> assertThat(metadata.getItems(), containsInAnyOrder(
                         patchItemWith(PatchFileItem.class, FILENAME_UNCHANGED, PatchAction.UNCHANGED),
                         patchItemWith(PatchFileItem.class, FILENAME_NEW, PatchAction.ADD),
+                        patchItemWith(PatchFileItem.class, FILENAME_COPY_FROM_INITIAL, PatchAction.ADD),
                         patchItemWith(PatchFileItem.class, FILENAME_REMOVED_FROM_SOURCE, PatchAction.REMOVE),
                         patchItemWith(PatchFileItem.class, FILENAME_MODIFIED_FROM_SOURCE, PatchAction.BSDIFF),
                         patchItemWith(PatchFileItem.class, FILENAME_MODIFIED_FROM_INITIAL, PatchAction.BSDIFF_FROM_INITIAL_BASELINE),
@@ -213,6 +215,7 @@ public class PatchTaskV1IT {
             assertThat(directoryItem.getItems(), containsInAnyOrder(
                     patchItemWith(PatchFileItem.class, FILENAME_UNCHANGED, PatchAction.UNCHANGED),
                     patchItemWith(PatchFileItem.class, FILENAME_NEW, PatchAction.ADD),
+                    patchItemWith(PatchFileItem.class, FILENAME_COPY_FROM_INITIAL, PatchAction.ADD),
                     patchItemWith(PatchFileItem.class, FILENAME_REMOVED_FROM_SOURCE, PatchAction.REMOVE),
                     patchItemWith(PatchFileItem.class, FILENAME_MODIFIED_FROM_SOURCE, PatchAction.BSDIFF),
                     patchItemWith(PatchFileItem.class, FILENAME_MODIFIED_FROM_INITIAL, PatchAction.BSDIFF_FROM_INITIAL_BASELINE),
