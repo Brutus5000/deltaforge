@@ -16,6 +16,7 @@ import net.brutus5000.deltaforge.client.patching.PatchGraphFactory;
 import net.brutus5000.deltaforge.client.patching.PatchService;
 import net.brutus5000.deltaforge.patching.io.IoService;
 import net.brutus5000.deltaforge.patching.io.ValidationService;
+import net.brutus5000.deltaforge.patching.meta.patch.PatchMetadata;
 import net.brutus5000.deltaforge.patching.meta.patch.PatchRequest;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.MessageFormat;
 import java.util.*;
 
 @Service
@@ -149,6 +151,7 @@ public class RepositoryService {
 
     public void downloadPatchIfMissing(Repository localRepository, Patch patch) throws InterruptedException, IOException, URISyntaxException {
         Path archiveDestination = getPatchFilePath(localRepository, patch, "zip");
+        Path metadataDestination = getPatchFilePath(localRepository, patch, "json");
 
         ioService.createDirectories(archiveDestination.getParent());
 
@@ -158,6 +161,15 @@ public class RepositoryService {
             URL downloadURL = localRepository.getRemotePatchURL(patch.getFrom().getName(), patch.getTo().getName(), "zip");
             log.debug("Downloading patch file from: {}", downloadURL);
             downloadService.download(downloadURL, archiveDestination);
+
+        }
+
+        if (ioService.isFile(metadataDestination)) {
+            log.debug("Patch metadata file {} is already on disk.", metadataDestination.getFileName());
+        } else {
+            URL downloadMetadataURL = localRepository.getRemotePatchURL(patch.getFrom().getName(), patch.getTo().getName(), "json");
+            log.debug("Downloading patch metadata file from: {}", downloadMetadataURL);
+            downloadService.download(downloadMetadataURL, metadataDestination);
         }
     }
 
@@ -173,7 +185,7 @@ public class RepositoryService {
             Path baselineDirectory = repository.getInitialBaselineFolder();
 
             PatchRequest patchRequest = (PatchRequest) new PatchRequest()
-                    .setSourceFolder(repository.getMainDirectory())
+                    .setSourceFolder(repository.getMainDirectory().resolve(Repository.DELTAFORGE_CURRENT_TAG_FOLDER))
                     .setPatchFolder(patchDirectory)
                     .setInitialBaselineFolder(baselineDirectory)
                     .setTargetFolder(resultDirectory)
@@ -193,8 +205,14 @@ public class RepositoryService {
             log.debug("Setting current tag to: {}", patch.getTo().getName());
             repository.setCurrentTag(patch.getTo().getName());
         } catch (IOException e) {
-            log.error("Applying patch failed: {}", e.getMessage(), e);
+            String message = MessageFormat.format("Applying patch failed: {0}", patch);
+            throw new CheckoutException(message, e);
         }
+    }
+
+    public void loadPatchMetadata(Repository repository, Patch patch) throws IOException {
+        PatchMetadata metadata = objectMapper.readValue(getPatchFilePath(repository, patch, "json").toFile(), PatchMetadata.class);
+        patch.setMetadata(metadata);
     }
 
     @Data

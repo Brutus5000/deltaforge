@@ -322,8 +322,9 @@ class RepositoryServiceTest {
                 Patch patch = new Patch()
                         .setTo(new Tag().setName("tagTo"))
                         .setFrom(new Tag().setName("tagFrom"));
-
                 underTest.downloadPatchIfMissing(cachedRepository, patch);
+
+                verify(ioServiceMock).createDirectories(any());
             }
 
             @Test
@@ -336,7 +337,8 @@ class RepositoryServiceTest {
 
                 underTest.downloadPatchIfMissing(cachedRepository, patch);
 
-                verify(downloadServiceMock).download(any(), any());
+                verify(ioServiceMock).createDirectories(any());
+                verify(downloadServiceMock, times(2)).download(any(), any());
             }
         }
 

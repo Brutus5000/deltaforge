@@ -109,6 +109,7 @@ class DeltaforgeClientTest {
 
         verify(repositoryService).calculatePatchPath(localRepository, TAG_NAME);
         verify(repositoryService, times(2)).downloadPatchIfMissing(eq(localRepository), any());
+        verify(repositoryService, times(2)).loadPatchMetadata(eq(localRepository), any());
         verify(repositoryService, times(2)).applyPatch(eq(localRepository), any());
     }
 
@@ -139,6 +140,7 @@ class DeltaforgeClientTest {
         verify(repositoryService).refreshTagGraph(repository);
         verify(repositoryService).calculatePatchPath(repository, TAG_NAME);
         verify(repositoryService, times(2)).downloadPatchIfMissing(eq(repository), any());
+        verify(repositoryService, times(2)).loadPatchMetadata(eq(repository), any());
         verify(repositoryService, times(2)).applyPatch(eq(repository), any());
     }
 }

@@ -46,11 +46,12 @@ public class DeltaforgeClient {
                     try {
                         log.info("Downloading patch `{}`", patch);
                         repositoryService.downloadPatchIfMissing(repository, patch);
+                        repositoryService.loadPatchMetadata(repository, patch);
 
                         log.info("Applying patch `{}`", patch);
                         repositoryService.applyPatch(repository, patch);
                     } catch (InterruptedException | IOException | URISyntaxException e) {
-                        throw new CheckoutException("Could not download one or more patch files: " + e.getMessage(), e);
+                        throw new CheckoutException("Could not read one or more patch files: " + e.getMessage(), e);
                     }
                 });
 
