@@ -1,5 +1,6 @@
 package net.brutus5000.deltaforge.client.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import net.brutus5000.deltaforge.patching.meta.patch.PatchMetadata;
@@ -14,6 +15,7 @@ public class Patch {
     private String id;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+    @JsonBackReference("patches")
     private Repository repository;
     private Tag from;
     private Tag to;

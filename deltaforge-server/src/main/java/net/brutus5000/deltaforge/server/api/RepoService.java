@@ -13,14 +13,14 @@ import net.brutus5000.deltaforge.server.events.TagCreatedEvent;
 import net.brutus5000.deltaforge.server.model.*;
 import net.brutus5000.deltaforge.server.repository.*;
 import net.brutus5000.deltaforge.server.resthandler.ValidationBuilder;
-import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.BidirectionalDijkstraShortestPath;
-import org.jgrapht.graph.DirectedWeightedPseudograph;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -84,14 +84,14 @@ public class RepoService {
     }
 
     @Transactional
-    public Graph<Tag, Patch> buildGraph(@NonNull Repository repository) {
-        log.debug("Building graph for repository: {}", repository);
+    public PatchGraph buildGraph(@NonNull Repository repository) {
+        log.debug("Building patchGraph for repository: {}", repository);
 
-        final Graph<Tag, Patch> graph = new DirectedWeightedPseudograph<>(Patch.class);
+        final PatchGraph graph = new PatchGraph();
         final Set<Tag> tags = tagRepository.findAllByRepository(repository);
 
         tags.forEach(graph::addVertex);
-        patchRepository.findAllByFromIn(tags).forEach(patch -> graph.addEdge(patch.getFrom(), patch.getTo(), patch));
+        patchRepository.findAllByFromIn(tags).forEach(graph::addEdge);
         graph.edgeSet().forEach(
                 patch -> graph.setEdgeWeight(patch, patch.getFileSize())
         );
@@ -153,12 +153,12 @@ public class RepoService {
 
     @EventListener
     public void onPatchCreated(@NonNull PatchCreatedEvent event) {
-        log.debug("Adding patch to repository graph for PatchCreatedEvent: {}", event);
+        log.debug("Adding patch to repository patchGraph for PatchCreatedEvent: {}", event);
 
         final Patch patch = event.getPatch();
         final Repository repository = patch.getFrom().getRepository();
 
-        repository.getPatchGraph().addEdge(patch.getFrom(), patch.getTo(), patch);
+        repository.getPatchGraph().addEdge(patch);
         repository.getPatchGraph().setEdgeWeight(patch, patch.getFileSize());
 
         if (event.isBaselineCheck()) {
@@ -208,9 +208,13 @@ public class RepoService {
 
     @EventListener
     public void onTagCreated(@NonNull TagCreatedEvent event) {
-        log.debug("Adding tag to repository graph for TagCreatedEvent: {}", event);
+        log.debug("Adding tag to repository patchGraph for TagCreatedEvent: {}", event);
 
         final Tag tag = event.getTag();
         tag.getRepository().getPatchGraph().addVertex(tag);
+    }
+
+    public Path getTagPath(Tag tag) {
+        return Paths.get(properties.getRootRepositoryPath(), tag.getRepository().getName(), "tags", tag.getName());
     }
 }

@@ -45,7 +45,7 @@ class PatchGraphTest {
 
         addTag(tag);
 
-        repository.setGraph(exportGraph(graph));
+        repository.setPatchGraph(exportGraph(graph));
         List<Patch> result = underTest.getPatchPath(tag, tag);
 
         assertThat(result.size(), is(0));
@@ -67,7 +67,7 @@ class PatchGraphTest {
         addTag(tagTwo);
         addPatch(patch);
 
-        repository.setGraph(exportGraph(graph));
+        repository.setPatchGraph(exportGraph(graph));
 
         List<Patch> result = underTest.getPatchPath(tagOne, tagTwo);
         assertThat(result.size(), is(1));

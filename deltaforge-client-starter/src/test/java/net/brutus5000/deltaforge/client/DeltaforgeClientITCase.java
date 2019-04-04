@@ -34,7 +34,7 @@ class DeltaforgeClientITCase {
         assertThat(repositoryOptional.isPresent(), is(false));
     }
 
-    //    @Ignore("Only for manual testing")
+    @Ignore("Only for manual testing")
     @Test
     void testAddRepository() throws Exception {
         Repository repository = deltaforgeClient.addRepository("myRepo",

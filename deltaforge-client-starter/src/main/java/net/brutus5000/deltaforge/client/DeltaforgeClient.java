@@ -62,7 +62,7 @@ public class DeltaforgeClient {
         try {
             repositoryService.refreshTagGraph(repository);
         } catch (IOException e) {
-            throw new CheckoutException("Refreshing of tag graph failed: " + e.getMessage(), e);
+            throw new CheckoutException("Refreshing of tag patchGraph failed: " + e.getMessage(), e);
         }
 
         Tag latestTag = repository.getLatestTag(branch)

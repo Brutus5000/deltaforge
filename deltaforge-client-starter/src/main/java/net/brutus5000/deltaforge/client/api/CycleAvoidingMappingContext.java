@@ -13,7 +13,7 @@ import java.util.Map;
  * A type to be used as {@link Context} parameter to track cycles in graphs for Mapstruct mapping.
  * <p>
  * Depending on the actual use case, the two methods below could also be changed to only accept certain argument types,
- * e.g. base classes of graph nodes, avoiding the need to capture any other objects that wouldn't necessarily result in
+ * e.g. base classes of patchGraph nodes, avoiding the need to capture any other objects that wouldn't necessarily result in
  * cycles.
  *
  * @author Andreas Gudian

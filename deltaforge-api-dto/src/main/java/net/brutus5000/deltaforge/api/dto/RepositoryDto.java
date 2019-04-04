@@ -49,5 +49,5 @@ public class RepositoryDto {
     @JsonManagedReference("patchParent")
     private Set<PatchDto> patches = new HashSet<>();
 
-    private String graph;
+    private String patchGraph;
 }

@@ -5,9 +5,17 @@ import net.brutus5000.deltaforge.server.model.*;
 import org.mapstruct.Mapper;
 
 import java.util.List;
+import java.util.UUID;
 
 @Mapper(componentModel = "spring", uses = CycleAvoidingMappingContext.class)
 public interface ApiDtoMapper {
+    default String map(UUID uuid) {
+        return uuid.toString();
+    }
+
+    default UUID map(String uuidString) {
+        return UUID.fromString(uuidString);
+    }
 
     RepositoryDto map(Repository repository);
 

@@ -112,7 +112,7 @@ public class ValidationService {
         Set<ValidateItem> items = new HashSet<>();
 
         for (Path directoryItem : ioService.getDirectoryItems(path)) {
-            if (ioService.isFile(path)) {
+            if (ioService.isFile(directoryItem)) {
                 if (ioService.isZipFile(directoryItem)) {
                     items.add(scanCompressedFile(directoryItem));
                 } else {

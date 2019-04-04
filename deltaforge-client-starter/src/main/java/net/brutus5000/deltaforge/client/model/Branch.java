@@ -1,5 +1,6 @@
 package net.brutus5000.deltaforge.client.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
@@ -14,6 +15,7 @@ import java.time.OffsetDateTime;
 public class Branch {
     private String id;
     private String name;
+    @JsonBackReference("branches")
     private Repository repository;
     private Tag currentTag;
     private OffsetDateTime createdAt;

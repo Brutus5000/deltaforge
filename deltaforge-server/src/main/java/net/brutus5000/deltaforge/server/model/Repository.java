@@ -2,6 +2,7 @@ package net.brutus5000.deltaforge.server.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.yahoo.elide.annotation.ComputedAttribute;
 import com.yahoo.elide.annotation.Include;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -52,13 +53,14 @@ public class Repository implements UniqueEntity {
     private Set<Patch> patches = new HashSet<>();
 
     @Transient
+    @ComputedAttribute
     @JsonProperty
     private PatchGraph patchGraph;
 
     @PostLoad
     @PostPersist
     public void initializePathGraph() {
-        log.debug("Building graph for repository: {}", this);
+        log.debug("Building patchGraph for repository: {}", this);
 
         patchGraph = new PatchGraph();
 

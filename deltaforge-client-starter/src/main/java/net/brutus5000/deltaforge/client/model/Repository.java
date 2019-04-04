@@ -1,7 +1,7 @@
 package net.brutus5000.deltaforge.client.model;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
@@ -15,7 +15,6 @@ import java.util.Optional;
 import java.util.Set;
 
 @Data
-@JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE)
 @EqualsAndHashCode(of = "name")
 public class Repository {
     public static final String DELTAFORGE_CURRENT_TAG_FOLDER = "currentTag";
@@ -34,19 +33,25 @@ public class Repository {
     private Integer protocolVersion;
     private String url;
     private String strategy;
+    @JsonManagedReference("branches")
     private Set<Branch> branches = new HashSet<>();
+    @JsonManagedReference("tags")
     private Set<Tag> tags = new HashSet<>();
+    @JsonManagedReference("patches")
     private Set<Patch> patches = new HashSet<>();
-    private String graph;
+    private String patchGraph;
 
+    @JsonIgnore
     public Path getInfoPath() {
         return mainDirectory.resolve(DELTAFORGE_INFO_FILE);
     }
 
+    @JsonIgnore
     public Path getCurrentTagFolder() {
         return mainDirectory.resolve(DELTAFORGE_CURRENT_TAG_FOLDER);
     }
 
+    @JsonIgnore
     public Path getInitialBaselineFolder() {
         return mainDirectory.resolve(DELTAFORGE_INITIAL_BASELINE_FOLDER);
     }

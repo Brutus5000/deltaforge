@@ -1,5 +1,6 @@
 package net.brutus5000.deltaforge.client.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Data;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
@@ -19,6 +20,7 @@ public class Tag {
     private String id;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+    @JsonBackReference("tags")
     private Repository repository;
     private String name;
     private String gitTagName;

@@ -48,9 +48,9 @@ public class PatchGraph {
 
         try {
             graph = new DirectedMultigraph<>(Patch.class);
-            importer.importGraph(graph, new StringReader(repository.getGraph()));
+            importer.importGraph(graph, new StringReader(repository.getPatchGraph()));
         } catch (ImportException e) {
-            throw new CheckoutException("Error on reading patch graph", e);
+            throw new CheckoutException("Error on reading patch patchGraph", e);
         }
     }
 

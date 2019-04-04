@@ -121,7 +121,7 @@ public class RepositoryService {
         Repository freshRepository = apiClient.getRepository(repository.getName())
                 .orElseThrow(() -> new IOException("Repository not found on the server."));
 
-        repository.setGraph(freshRepository.getGraph());
+        repository.setPatchGraph(freshRepository.getPatchGraph());
         repositoryCache.get(repository).patchGraph.refreshGraph();
     }
 

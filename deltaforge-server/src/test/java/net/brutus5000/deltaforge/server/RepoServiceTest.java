@@ -6,7 +6,6 @@ import net.brutus5000.deltaforge.server.events.PatchCreatedEvent;
 import net.brutus5000.deltaforge.server.events.TagCreatedEvent;
 import net.brutus5000.deltaforge.server.model.*;
 import net.brutus5000.deltaforge.server.repository.*;
-import org.jgrapht.Graph;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -49,7 +48,7 @@ class RepoServiceTest {
     private Branch branch;
     private Tag tag;
     @Mock
-    private Graph<Tag, Patch> repositoryGraph;
+    private PatchGraph repositoryGraph;
 
     @BeforeEach
     void beforeEach() {
@@ -90,7 +89,7 @@ class RepoServiceTest {
 
             repoService.onPatchCreated(new PatchCreatedEvent(patch, false));
 
-            verify(repositoryGraph).addEdge(from, to, patch);
+            verify(repositoryGraph).addEdge(patch);
             verify(repositoryGraph).setEdgeWeight(patch, fileSize);
         }
 
