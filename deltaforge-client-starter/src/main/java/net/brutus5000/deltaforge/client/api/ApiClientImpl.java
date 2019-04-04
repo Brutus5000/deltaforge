@@ -32,7 +32,7 @@ public class ApiClientImpl implements ApiClient {
         this.restTemplate = restTemplateBuilder
                 .additionalMessageConverters(jsonApiMessageConverter)
                 .errorHandler(jsonApiErrorHandler)
-                .rootUri(properties.getServerUrl())
+                .rootUri(properties.getServerApiUrl())
                 .build();
     }
 

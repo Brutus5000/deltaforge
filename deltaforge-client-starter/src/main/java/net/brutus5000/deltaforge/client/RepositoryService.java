@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 @Service
@@ -63,6 +64,9 @@ public class RepositoryService {
                 .setPatchGraph(patchGraphFactory.buildPatchGraph(repository));
 
         repositoryCache.put(repository, cacheItem);
+
+        repository.setMainDirectory(Paths.get(properties.getRootDirectory(), repository.getName()));
+        repository.setUrl(properties.getServerContentUrl() + "/" + repository.getName());
     }
 
     public Optional<Repository> findByName(String name) throws IOException {
@@ -146,10 +150,12 @@ public class RepositoryService {
     public void downloadPatchIfMissing(Repository localRepository, Patch patch) throws InterruptedException, IOException, URISyntaxException {
         Path archiveDestination = getPatchFilePath(localRepository, patch, "zip");
 
+        ioService.createDirectories(archiveDestination.getParent());
+
         if (ioService.isFile(archiveDestination)) {
             log.debug("Patch file {} is already on disk.", archiveDestination.getFileName());
         } else {
-            URL downloadURL = localRepository.getRemotePatchURL(patch.getFrom().getName(), patch.getTo().getName());
+            URL downloadURL = localRepository.getRemotePatchURL(patch.getFrom().getName(), patch.getTo().getName(), "zip");
             log.debug("Downloading patch file from: {}", downloadURL);
             downloadService.download(downloadURL, archiveDestination);
         }

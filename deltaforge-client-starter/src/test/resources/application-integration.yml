@@ -1,3 +1,4 @@
 deltaforge:
-  server-url: http://localhost:8080
+  server-api-url: http://localhost:8080
+  server-content-url: http://localhost/data
   root-directory: out/test-data/repo

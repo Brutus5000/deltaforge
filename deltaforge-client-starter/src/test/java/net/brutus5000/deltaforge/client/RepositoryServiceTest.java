@@ -113,7 +113,8 @@ class RepositoryServiceTest {
 
                 Optional<Repository> result = underTest.findByName(REPOSITORY_NAME);
 
-                verify(propertiesMock).getRootDirectory();
+                verify(propertiesMock, times(2)).getRootDirectory();
+                verify(propertiesMock).getServerContentUrl();
                 verify(ioServiceMock).isFile(any());
                 verify(objectMapperMock).readValue(any(File.class), eq(Repository.class));
                 verify(patchGraphFactoryMock).buildPatchGraph(repository);
@@ -198,6 +199,8 @@ class RepositoryServiceTest {
 
                 assertThat(result.getName(), is(REPOSITORY_NAME));
 
+                verify(propertiesMock).getRootDirectory();
+                verify(propertiesMock).getServerContentUrl();
                 verify(apiClientMock).getRepository(REPOSITORY_NAME);
                 verify(ioServiceMock).copyDirectory(any(), any());
                 verify(objectMapperMock).writeValue(any(File.class), eq(repository));

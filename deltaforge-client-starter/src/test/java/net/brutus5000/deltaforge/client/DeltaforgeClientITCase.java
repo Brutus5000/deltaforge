@@ -45,6 +45,8 @@ class DeltaforgeClientITCase {
     @Disabled("Only for manual testing")
     @Test
     void testCheckoutLatest() throws Exception {
+        // I am using HFS to mount the /data folder to localhost
+
         Repository repository = deltaforgeClient.loadRepository(REPO_NAME).get();
         deltaforgeClient.checkoutLatest(repository, "develop");
     }

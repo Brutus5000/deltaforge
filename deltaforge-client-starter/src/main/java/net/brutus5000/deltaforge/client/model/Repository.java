@@ -75,9 +75,9 @@ public class Repository {
      * @return URL to the remote patch file
      */
     @SneakyThrows
-    public URL getRemotePatchURL(String fromVersion, String toVersion) {
+    public URL getRemotePatchURL(String fromVersion, String toVersion, String fileExtension) {
         return new URL(url + "/" + DELTAFORGE_PATCHES_SUBFOLDER + "/" +
-                MessageFormat.format(DELTAFORGE_PATCH_FILE_PATTERN, fromVersion, toVersion));
+                MessageFormat.format(DELTAFORGE_PATCH_FILE_PATTERN, fromVersion, toVersion, fileExtension));
     }
 
     public Optional<Channel> getChannel(String name) {

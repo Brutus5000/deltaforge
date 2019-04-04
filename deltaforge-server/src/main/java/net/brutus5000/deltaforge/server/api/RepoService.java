@@ -142,17 +142,17 @@ public class RepoService {
         log.debug("Creating tag assignment for channelDto id '{}': {}", channelId, tagAssignment);
         tagAssignmentRepository.save(tagAssignment);
 
-        // TODO: Needs to implement patching strategy
         if (tagType == TagType.SOURCE) {
             enqueuePatch(initialBaselineTag, channel.getCurrentBaseline(), tag, false);
             enqueuePatch(initialBaselineTag, tag, channel.getCurrentBaseline(), false);
+            log.debug("Latest tag remains '{}' for channel: {}", tag, channel);
         } else {
             enqueuePatch(initialBaselineTag, channel.getCurrentTag(), tag, true);
             enqueuePatch(initialBaselineTag, tag, channel.getCurrentTag(), false);
+            channel.setCurrentTag(tag);
+            log.debug("Updating channel '{}' current tag to: {}", channel, tag);
         }
 
-        log.debug("Updating channelDto '{}' current tag to: {}", channel, tag);
-        channel.setCurrentTag(tag);
         channelRepository.save(channel);
     }
 

@@ -11,7 +11,10 @@ import javax.validation.constraints.NotBlank;
 @Data
 public class DeltaforgeClientProperties {
     @NotBlank
-    private String serverUrl;
+    private String serverApiUrl;
+
+    @NotBlank
+    private String serverContentUrl;
 
     @NotBlank
     private String rootDirectory;
