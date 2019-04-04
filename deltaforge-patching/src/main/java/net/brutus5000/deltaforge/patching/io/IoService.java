@@ -39,6 +39,7 @@ public class IoService {
     }
 
     public void copy(@NonNull Path from, @NonNull Path to) throws IOException {
+        Files.createDirectories(to.getParent());
         Files.copy(from, to);
     }
 

@@ -85,6 +85,7 @@ public class PatchTaskV1 {
                 }
             } else {
                 item.setAction(PatchAction.ADD);
+                ioService.copy(targetFile, patchFile);
             }
         } else {
             item.setAction(PatchAction.REMOVE);
@@ -129,19 +130,21 @@ public class PatchTaskV1 {
                 .setAction(patchAction)
                 .setItems(new HashSet<>());
 
-        for (Path subDirectory : subDirectories) {
-            PatchDirectoryItem subDirectoryItem = compareDirectory(relativeFolderPath.resolve(subDirectory));
-            item.getItems().add(subDirectoryItem);
-        }
-
-        for (Path file : files) {
-            PatchItem fileItem;
-            if (ioService.isZipFile(file)) {
-                fileItem = compareZipFile(relativeFolderPath.resolve(file));
-            } else {
-                fileItem = compareFile(relativeFolderPath.resolve(file));
+        if (item.getAction() == PatchAction.DELTA) {
+            for (Path subDirectory : subDirectories) {
+                PatchDirectoryItem subDirectoryItem = compareDirectory(relativeFolderPath.resolve(subDirectory));
+                item.getItems().add(subDirectoryItem);
             }
-            item.getItems().add(fileItem);
+
+            for (Path file : files) {
+                PatchItem fileItem;
+                if (ioService.isZipFile(file)) {
+                    fileItem = compareZipFile(relativeFolderPath.resolve(file));
+                } else {
+                    fileItem = compareFile(relativeFolderPath.resolve(file));
+                }
+                item.getItems().add(fileItem);
+            }
         }
 
         return item;
