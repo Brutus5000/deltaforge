@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
+import static org.apache.commons.compress.archivers.ArchiveStreamFactory.ZIP;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.*;
@@ -246,7 +247,7 @@ public class PatchTaskV1IT {
 
         @Test
         void compareZipUnchanged() throws Exception {
-            PatchCompressedItem item = instance.compareZipFile(Paths.get(FOLDER_ZIP, ARCHIVE_UNCHANGED));
+            PatchCompressedItem item = instance.compareCompressedFile(Paths.get(FOLDER_ZIP, ARCHIVE_UNCHANGED), ZIP);
 
             assertAll("item",
                     () -> assertEquals(ARCHIVE_UNCHANGED, item.getName()),
@@ -258,7 +259,7 @@ public class PatchTaskV1IT {
 
         @Test
         void compareZipNew() throws Exception {
-            PatchCompressedItem item = instance.compareZipFile(Paths.get(FOLDER_ZIP, ARCHIVE_NEW));
+            PatchCompressedItem item = instance.compareCompressedFile(Paths.get(FOLDER_ZIP, ARCHIVE_NEW), ZIP);
 
             assertAll("item",
                     () -> assertEquals(ARCHIVE_NEW, item.getName()),
@@ -270,7 +271,7 @@ public class PatchTaskV1IT {
 
         @Test
         void compareZipRemovedFromSource() throws Exception {
-            PatchCompressedItem item = instance.compareZipFile(Paths.get(FOLDER_ZIP, ARCHIVE_REMOVED_FROM_SOURCE));
+            PatchCompressedItem item = instance.compareCompressedFile(Paths.get(FOLDER_ZIP, ARCHIVE_REMOVED_FROM_SOURCE), ZIP);
 
             assertAll("item",
                     () -> assertEquals(ARCHIVE_REMOVED_FROM_SOURCE, item.getName()),
@@ -282,7 +283,7 @@ public class PatchTaskV1IT {
 
         @Test
         void compareZipModifiedFromSource() throws Exception {
-            PatchCompressedItem item = instance.compareZipFile(Paths.get(FOLDER_ZIP, ARCHIVE_MODIFIED_FROM_SOURCE));
+            PatchCompressedItem item = instance.compareCompressedFile(Paths.get(FOLDER_ZIP, ARCHIVE_MODIFIED_FROM_SOURCE), ZIP);
 
             assertAll("item",
                     () -> assertEquals(ARCHIVE_MODIFIED_FROM_SOURCE, item.getName()),
@@ -294,7 +295,7 @@ public class PatchTaskV1IT {
 
         @Test
         void compareZipModifiedFromInitial() throws Exception {
-            PatchCompressedItem item = instance.compareZipFile(Paths.get(FOLDER_ZIP, ARCHIVE_MODIFIED_FROM_INITIAL));
+            PatchCompressedItem item = instance.compareCompressedFile(Paths.get(FOLDER_ZIP, ARCHIVE_MODIFIED_FROM_INITIAL), ZIP);
 
             assertAll("item",
                     () -> assertEquals(ARCHIVE_MODIFIED_FROM_INITIAL, item.getName()),

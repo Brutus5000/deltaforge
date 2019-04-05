@@ -12,20 +12,19 @@ import net.brutus5000.deltaforge.server.error.ApiException;
 import net.brutus5000.deltaforge.server.error.ErrorCode;
 import net.brutus5000.deltaforge.server.model.*;
 import net.brutus5000.deltaforge.server.repository.*;
+import org.apache.commons.compress.archivers.ArchiveException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.UUID;
-import java.util.zip.ZipOutputStream;
 
-import static java.nio.file.Files.newOutputStream;
+import static org.apache.commons.compress.archivers.ArchiveStreamFactory.ZIP;
 
 @Service
 @Slf4j
@@ -159,14 +158,18 @@ public class FileService {
         Files.writeString(jsonPath, objectMapper.writeValueAsString(metadata), StandardOpenOption.CREATE_NEW);
     }
 
-    public void zipPatchFolderContent(@NonNull Patch patch, Path patchDirectory) throws IOException {
+    public void zipPatchFolderContent(@NonNull Patch patch, @NonNull Path patchDirectory) throws IOException {
         Path patchPath = buildPatchPath(patch, "zip");
         Files.createDirectories(patchPath.getParent());
 
-        try (ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(newOutputStream(patchPath)))) {
-            Zipper.contentOf(patchDirectory)
-                    .to(zipOutputStream)
-                    .zip();
+        try {
+            Zipper.contentOf(patchDirectory, ZIP).to(patchPath).zip();
+        } catch (ArchiveException e) {
+            if (e.getCause() instanceof IOException) {
+                throw (IOException) e.getCause();
+            } else {
+                throw new IOException("Archiving failed", e);
+            }
         }
     }
 }

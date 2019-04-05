@@ -1,6 +1,7 @@
 package net.brutus5000.deltaforge.patching.io;
 
 
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -9,9 +10,8 @@ import java.nio.file.Paths;
 import java.util.Collection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 class IoServiceTest {
     public static final String FILE_PREFIX = "./src/test/resources/testArchiveFiles";
@@ -41,10 +41,10 @@ class IoServiceTest {
     }
 
     @Test
-    void isZipFile() throws Exception {
-        assertAll("content types",
-                () -> assertTrue(instance.isZipFile(Paths.get(FILE_PREFIX, "archive.zip"))),
-                () -> assertFalse(instance.isZipFile(Paths.get(FILE_PREFIX, "archive.7z")))
+    void determineArchiveType() throws Exception {
+        assertAll("detect archive type",
+                () -> assertThat(instance.determineArchiveType(Paths.get(FILE_PREFIX, "archive.zip")), is(ArchiveStreamFactory.ZIP)),
+                () -> assertThat(instance.determineArchiveType(Paths.get(FILE_PREFIX, "archive.7z")), is(nullValue()))
         );
     }
 }

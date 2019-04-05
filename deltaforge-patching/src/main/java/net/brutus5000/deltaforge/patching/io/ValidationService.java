@@ -98,7 +98,7 @@ public class ValidationService {
 
         Path tempDirectory = ioService.createTempDirectory("deltaforge_validate_");
         try {
-            ioService.unzip(path, tempDirectory);
+            ioService.unzip(path, tempDirectory, item.getAlgorithm());
             validateDirectory(tempDirectory, item.getItems(), true);
         } finally {
             ioService.deleteQuietly(tempDirectory);
@@ -113,7 +113,7 @@ public class ValidationService {
 
         for (Path directoryItem : ioService.getDirectoryItems(path)) {
             if (ioService.isFile(directoryItem)) {
-                if (ioService.isZipFile(directoryItem)) {
+                if (ioService.determineArchiveType(directoryItem) != null) {
                     items.add(scanCompressedFile(directoryItem));
                 } else {
                     items.add(scanFile(directoryItem));

@@ -28,6 +28,8 @@ import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.*;
 
+import static org.apache.commons.compress.archivers.ArchiveStreamFactory.ZIP;
+
 @Service
 @Slf4j
 public class RepositoryService {
@@ -197,7 +199,7 @@ public class RepositoryService {
                     .setFileRenaming(patch.getMetadata().getFileRenaming());
 
             log.debug("Unzip patch file to: {}", patchDirectory);
-            ioService.unzip(getPatchFilePath(repository, patch, "zip"), patchDirectory);
+            ioService.unzip(getPatchFilePath(repository, patch, ZIP), patchDirectory, ZIP);
 
             log.debug("Invoking patchService with PatchRequest: {}", patchRequest);
             patchService.applyPatch(patchRequest);

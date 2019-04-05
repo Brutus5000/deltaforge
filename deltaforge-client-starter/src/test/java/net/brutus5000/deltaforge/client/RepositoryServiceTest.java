@@ -357,7 +357,7 @@ class RepositoryServiceTest {
                 verify(ioServiceMock, times(2)).createTempDirectory(any());
                 verify(ioServiceMock).deleteDirectory(any());
                 verify(ioServiceMock).moveDirectory(any(), any());
-                verify(ioServiceMock).unzip(any(), any());
+                verify(ioServiceMock).unzip(any(), any(), anyString());
                 verify(patchServiceMock).applyPatch(any());
             }
         }

@@ -1,144 +1,107 @@
 package net.brutus5000.deltaforge.patching.io;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveException;
+import org.apache.commons.compress.archivers.ArchiveOutputStream;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.apache.commons.compress.utils.IOUtils;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 @Slf4j
 public final class Zipper {
     private static final char PATH_SEPARATOR = File.separatorChar;
+    private static final Path NEUTRAL_PATH = Paths.get("");
+
     private final Path directoryToZip;
+    private String archiveType;
     private boolean zipContent;
-    private ByteCountListener byteCountListener;
-    private int byteCountInterval;
-    private int bufferSize;
-    private long bytesTotal;
-    private long bytesDone;
-    private ZipOutputStream zipOutputStream;
+    private ArchiveOutputStream archiveOutputStream;
     private boolean closeStream;
-    private long lastCountUpdate;
-    private byte[] buffer;
 
     /**
-     * @param zipContent {@code true} if the contents of the directory should be zipped, {@code false} if the specified
-     *                   file (directory) should be zipped directly.
+     * @param archiveType determines the type of the archive
+     * @param zipContent  {@code true} if the contents of the directory should be zipped, {@code false} if the specified
+     *                    file (directory) should be zipped directly.
      */
-    private Zipper(Path directoryToZip, boolean zipContent) {
+    private Zipper(Path directoryToZip, String archiveType, boolean zipContent) {
         this.directoryToZip = directoryToZip;
+        this.archiveType = archiveType;
         this.zipContent = zipContent;
-        // 4K
-        bufferSize = 0x1000;
-        byteCountInterval = 40;
     }
 
-    public static Zipper of(Path path) {
-        return new Zipper(path, false);
+    public static Zipper of(Path path, String archiveType) {
+        return new Zipper(path, archiveType, false);
     }
 
-    public static Zipper contentOf(Path path) {
-        return new Zipper(path, true);
+    public static Zipper contentOf(Path path, String archiveType) {
+        return new Zipper(path, archiveType, true);
     }
 
-    public Zipper to(ZipOutputStream zipOutputStream) {
-        this.zipOutputStream = zipOutputStream;
+    public Zipper to(ArchiveOutputStream archiveOutputStream) {
+        this.archiveOutputStream = archiveOutputStream;
         this.closeStream = false;
         return this;
     }
 
-    public Zipper to(Path path) throws IOException {
-        this.zipOutputStream = new ZipOutputStream(Files.newOutputStream(path));
+    public Zipper to(Path path) throws IOException, ArchiveException {
+        this.archiveOutputStream = new ArchiveStreamFactory().createArchiveOutputStream(archiveType, new BufferedOutputStream(Files.newOutputStream(path)));
         this.closeStream = true;
         return this;
     }
 
-    public Zipper byteCountInterval(int byteCountInterval) {
-        this.byteCountInterval = byteCountInterval;
-        return this;
-    }
-
-    public Zipper listener(ByteCountListener byteCountListener) {
-        this.byteCountListener = byteCountListener;
-        return this;
-    }
-
     public void zip() throws IOException {
-        Objects.requireNonNull(zipOutputStream, "zipOutputStream must not be null");
+        Objects.requireNonNull(archiveOutputStream, "archiveOutputStream must not be null");
         Objects.requireNonNull(directoryToZip, "directoryToZip must not be null");
-
-        bytesTotal = calculateTotalBytes();
-        bytesDone = 0;
-        buffer = new byte[bufferSize];
 
         Files.walkFileTree(directoryToZip, new SimpleFileVisitor<Path>() {
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                String relativized;
-                relativized = zipContent
-                        ? directoryToZip.relativize(dir).toString().replace(PATH_SEPARATOR, '/')
-                        : directoryToZip.getParent().relativize(dir).toString().replace(PATH_SEPARATOR, '/');
+                Path relativePath = zipContent
+                        ? directoryToZip.relativize(dir)
+                        : directoryToZip.getParent().relativize(dir);
 
-                if (relativized.isEmpty()) {
+                if (relativePath.equals(NEUTRAL_PATH)) {
                     return FileVisitResult.CONTINUE;
                 }
-                zipOutputStream.putNextEntry(new ZipEntry(relativized + "/"));
-                zipOutputStream.closeEntry();
+
+                ArchiveEntry archiveEntry = archiveOutputStream.createArchiveEntry(dir.toFile(), relativePath.toString().replace(PATH_SEPARATOR, '/') + '/');
+                archiveOutputStream.putArchiveEntry(archiveEntry);
+                archiveOutputStream.closeArchiveEntry();
                 return FileVisitResult.CONTINUE;
             }
 
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 log.trace("Zipping file {}", file.toAbsolutePath());
 
+                Path relativePath;
+
                 if (zipContent) {
-                    zipOutputStream.putNextEntry(new ZipEntry(directoryToZip.relativize(file).toString().replace(PATH_SEPARATOR, '/')));
+                    relativePath = directoryToZip.relativize(file);
                 } else {
-                    zipOutputStream.putNextEntry(new ZipEntry(directoryToZip.getParent().relativize(file).toString().replace(PATH_SEPARATOR, '/')));
+                    relativePath = directoryToZip.getParent().relativize(file);
                 }
 
+                ArchiveEntry archiveEntry = archiveOutputStream.createArchiveEntry(file.toFile(), relativePath.toString().replace(PATH_SEPARATOR, '/'));
+                archiveOutputStream.putArchiveEntry(archiveEntry);
+
                 try (InputStream inputStream = Files.newInputStream(file)) {
-                    copy(inputStream, zipOutputStream);
+                    IOUtils.copy(inputStream, archiveOutputStream);
                 }
-                zipOutputStream.closeEntry();
+
+                archiveOutputStream.closeArchiveEntry();
                 return FileVisitResult.CONTINUE;
             }
         });
 
         if (closeStream) {
-            zipOutputStream.close();
-        }
-    }
-
-    private long calculateTotalBytes() throws IOException {
-        final long[] bytesTotal = {0};
-        Files.walkFileTree(directoryToZip, new SimpleFileVisitor<Path>() {
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                bytesTotal[0] += Files.size(file);
-                return FileVisitResult.CONTINUE;
-            }
-        });
-        return bytesTotal[0];
-    }
-
-    private void copy(InputStream inputStream, OutputStream outputStream) throws IOException {
-        int length;
-        while ((length = inputStream.read(buffer)) > 0) {
-            outputStream.write(buffer, 0, length);
-            bytesDone += length;
-
-            long now = System.currentTimeMillis();
-            if (byteCountListener != null && lastCountUpdate < now - byteCountInterval) {
-                byteCountListener.updateBytesWritten(bytesDone, bytesTotal);
-                lastCountUpdate = now;
-            }
+            archiveOutputStream.close();
         }
     }
 }

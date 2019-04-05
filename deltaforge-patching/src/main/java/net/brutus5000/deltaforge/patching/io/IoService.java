@@ -3,13 +3,17 @@ package net.brutus5000.deltaforge.patching.io;
 import com.google.common.hash.Hashing;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.compress.archivers.ArchiveException;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.io.FileUtils;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Collection;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -18,6 +22,9 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class IoService {
+
+    private final ArchiveStreamFactory archiveStreamFactory = new ArchiveStreamFactory();
+
     public boolean isDirectory(@NonNull Path path) {
         return Files.isDirectory(path);
     }
@@ -64,19 +71,53 @@ public class IoService {
                 .collect(Collectors.toList());
     }
 
-    public boolean isZipFile(@NonNull Path path) throws IOException {
-        String contentType = Files.probeContentType(path);
-        log.trace("Detected content type: " + contentType);
+    /**
+     * Detects the archive type of the given file.
+     *
+     * @param path pointing to any file
+     * @return an archive type supported by Apache Comproess or otherwise {@code null} (if unsupported or no archive file)
+     * @throws IOException if reading the file fails
+     */
+    public String determineArchiveType(@NonNull Path path) throws IOException {
+        try (InputStream inputStream = new BufferedInputStream(Files.newInputStream(path, StandardOpenOption.READ))) {
+            String archiveType = ArchiveStreamFactory.detect(inputStream);
 
-        return Objects.equals(contentType, "application/x-zip-compressed") // Windows
-                || Objects.equals(contentType, "application/zip"); // Unix
+            // If Apache Compress can't write the format, we cannot support it
+            // Note: Even though 7z is supported by Apache Compress, it does not work with the streaming approach of our implementation
+            if (archiveStreamFactory.getOutputStreamArchiveNames().contains(archiveType)
+                    && !archiveType.equals(ArchiveStreamFactory.SEVEN_Z)
+            ) {
+                return archiveType;
+            } else {
+                return null;
+            }
+        } catch (ArchiveException e) {
+            return null;
+        }
     }
 
-    public void zip(@NonNull Path folderPath, @NonNull Path archiveFile) throws IOException {
-        Zipper.contentOf(folderPath).to(archiveFile);
+    // TODO: Also support De/compressing of non-archive files (e.g. gz, bz2) using CompressorStreamFactory
+    public void zip(@NonNull Path folderPath, @NonNull Path archiveFile, @NonNull String archiveType) throws IOException {
+        try {
+            Zipper.contentOf(folderPath, archiveType).to(archiveFile).zip();
+        } catch (ArchiveException e) {
+            if (e.getCause() instanceof IOException) {
+                throw (IOException) e.getCause();
+            } else {
+                throw new IOException("Archiving failed", e);
+            }
+        }
     }
 
-    public void unzip(@NonNull Path archiveFile, @NonNull Path folderPath) throws IOException {
-        Unzipper.from(archiveFile).to(folderPath).unzip();
+    public void unzip(@NonNull Path archiveFile, @NonNull Path folderPath, @NonNull String archiveType) throws IOException {
+        try {
+            Unzipper.from(archiveFile, archiveType).to(folderPath).unzip();
+        } catch (ArchiveException e) {
+            if (e.getCause() instanceof IOException) {
+                throw (IOException) e.getCause();
+            } else {
+                throw new IOException("Extracting archive file failed", e);
+            }
+        }
     }
 }

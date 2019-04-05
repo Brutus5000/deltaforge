@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
+import static org.apache.commons.compress.archivers.ArchiveStreamFactory.ZIP;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -273,6 +274,7 @@ class PatchTaskV1Test {
         void testApplyWithoutItems() throws Exception {
             patchItem.setItems(Sets.newHashSet());
             patchItem.setAction(PatchAction.DELTA);
+            patchItem.setAlgorithm(ZIP);
 
             final Path tempRootDirectory = Paths.get("someTemporaryZipPath");
             final Path sourceFolder = tempRootDirectory.resolve("source");
@@ -288,9 +290,9 @@ class PatchTaskV1Test {
 
             instance.applyZipFile(patchItem, SELF_PATH);
 
-            verify(ioService).unzip(sourceZipFile, sourceFolder);
-            verify(ioService).unzip(patchZipFile, patchFolder);
-            verify(ioService).zip(eq(targetFolder), any(Path.class));
+            verify(ioService).unzip(sourceZipFile, sourceFolder, ZIP);
+            verify(ioService).unzip(patchZipFile, patchFolder, ZIP);
+            verify(ioService).zip(eq(targetFolder), any(Path.class), eq(ZIP));
             verify(ioService).deleteDirectory(tempRootDirectory);
             verifyNoMoreInteractions(ioService);
             verifyZeroInteractions(bsdiff4Service);
