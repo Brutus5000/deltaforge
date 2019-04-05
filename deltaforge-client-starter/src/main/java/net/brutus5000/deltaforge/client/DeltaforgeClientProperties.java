@@ -10,12 +10,21 @@ import javax.validation.constraints.NotBlank;
 @Validated
 @Data
 public class DeltaforgeClientProperties {
+    /**
+     * The url to the Deltaforge server.
+     */
     @NotBlank
     private String serverApiUrl;
 
+    /**
+     * The url to the content server serving the Deltaforge server files.
+     */
     @NotBlank
     private String serverContentUrl;
 
+    /**
+     *
+     */
     @NotBlank
     private String rootDirectory;
 }
