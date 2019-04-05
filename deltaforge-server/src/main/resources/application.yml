@@ -11,4 +11,4 @@ deltaforge:
   security:
     auth-token-header-name: x-api-key
     auth-token: ${API_KEY}
-  root-repository-path: ./data
+  root-repository-path: ${ROOT_REPOSITORY_PATH}
