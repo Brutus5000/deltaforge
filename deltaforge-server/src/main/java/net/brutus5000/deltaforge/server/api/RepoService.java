@@ -123,7 +123,7 @@ public class RepoService {
         }
 
         Tag tag = tagRepository.findById(tagId)
-                .orElseThrow(() -> ApiException.of(ErrorCode.TAG_NOT_FOUND, tagId.toString()));
+                .orElseThrow(() -> ApiException.of(ErrorCode.TAG_NOT_FOUND, tagId));
 
         TagTypeDto tagTypeDto = TagTypeDto.fromString(tagTypeName)
                 .orElseThrow(() -> ApiException.of(ErrorCode.TAG_INVALID_TYPE, tagTypeName));
@@ -132,7 +132,7 @@ public class RepoService {
 
         Optional<TagAssignment> existingAssignment = tagAssignmentRepository.findByChannelAndTag(channel, tag);
         if (existingAssignment.isPresent()) {
-            throw ApiException.of(ErrorCode.TAG_ALREADY_ASSIGNED, tag.getId().toString(), channel.getId());
+            throw ApiException.of(ErrorCode.TAG_ALREADY_ASSIGNED, tag.getId(), channel.getId());
         }
 
         TagAssignment tagAssignment = new TagAssignment()
@@ -143,7 +143,7 @@ public class RepoService {
         tagAssignmentRepository.save(tagAssignment);
 
         if (tagType == TagType.SOURCE) {
-            enqueuePatch(initialBaselineTag, channel.getCurrentBaseline(), tag, false);
+            // source tags can only patch to baseline, otherwise copyrighted content will make it into the patch
             enqueuePatch(initialBaselineTag, tag, channel.getCurrentBaseline(), false);
             log.debug("Latest tag remains '{}' for channel: {}", tag, channel);
         } else {
