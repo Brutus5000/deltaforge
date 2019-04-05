@@ -14,4 +14,15 @@ public class DeltaforgeServerProperties {
 
     @NotNull
     private Long baselineFilesizeThreshold;
+
+    private final Security security = new Security();
+
+    @Data
+    public static class Security {
+        @NotBlank
+        private String authTokenHeaderName;
+
+        @NotBlank
+        private String authToken;
+    }
 }

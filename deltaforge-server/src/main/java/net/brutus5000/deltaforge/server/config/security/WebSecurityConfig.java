@@ -1,5 +1,6 @@
 package net.brutus5000.deltaforge.server.config.security;
 
+import net.brutus5000.deltaforge.server.config.DeltaforgeServerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,14 +17,24 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
+    private final DeltaforgeServerProperties properties;
+
+    public WebSecurityConfig(DeltaforgeServerProperties properties) {
+        this.properties = properties;
+    }
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        ApiKeyAuthFilter apiKeyAuthFilter = new ApiKeyAuthFilter(properties);
+
         // @formatter:off
         http
                 .csrf().disable()
                 .headers()
                 .cacheControl().disable()
-                .and().authorizeRequests()
+                .and()
+                .addFilter(apiKeyAuthFilter)
+                .authorizeRequests()
                 .antMatchers(HttpMethod.OPTIONS).permitAll()
                 // Swagger UI
                 .antMatchers("/swagger-ui.html").permitAll()

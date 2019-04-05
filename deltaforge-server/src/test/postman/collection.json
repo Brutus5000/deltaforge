@@ -1,496 +1,678 @@
 {
-  "info": {
-    "_postman_id": "08502a7c-9342-4a95-855e-7e378ad1f6c4",
-    "name": "Deltaforge",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "item": [
-    {
-      "name": "Repository",
-      "item": [
-        {
-          "name": "Create Repository \"myRepo\"",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "id": "544e5ebe-201d-478d-9285-8da05a3ecb8f",
-                "exec": [
-                  ""
-                ],
-                "type": "text/javascript"
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "id": "946e2965-f252-485a-b3dc-3ec4919c24fe",
-                "exec": [
-                  "var jsonData = JSON.parse(responseBody);",
-                  "postman.setEnvironmentVariable(\"repositoryId\", jsonData.data.id);"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "name": "Content-Type",
-                "type": "text",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n\t\"data\": {\n\t\t\"type\": \"repository\",\n\t\t\"attributes\": {\n\t\t\t\"name\": \"myRepo\"\n\t\t}\n\t}\n}"
-            },
-            "url": {
-              "raw": "http://localhost:8080/data/repository",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "data",
-                "repository"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "List repositories",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "id": "544e5ebe-201d-478d-9285-8da05a3ecb8f",
-                "exec": [
-                  ""
-                ],
-                "type": "text/javascript"
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "id": "946e2965-f252-485a-b3dc-3ec4919c24fe",
-                "exec": [
-                  ""
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "",
-                "name": "Content-Type",
-                "type": "text",
-                "value": "",
-                "disabled": true
-              },
-              {
-                "key": "Content-Type",
-                "value": "",
-                "disabled": true
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": ""
-            },
-            "url": {
-              "raw": "http://localhost:8080/data/repository?include=tags",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "data",
-                "repository"
-              ],
-              "query": [
-                {
-                  "key": "include",
-                  "value": "tags"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Repository \"myRepo\"",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": ""
-            },
-            "url": {
-              "raw": "http://localhost:8080/data/repository/{{repositoryId}}?include=tags,channels",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "data",
-                "repository",
-                "{{repositoryId}}"
-              ],
-              "query": [
-                {
-                  "key": "include",
-                  "value": "tags,channels"
-                }
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Tag",
-      "item": [
-        {
-          "name": "Create tag \"source\"",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "id": "9c7209cd-b714-4be5-bda6-b995eee76e07",
-                "exec": [
-                  "var jsonData = JSON.parse(responseBody);",
-                  "postman.setEnvironmentVariable(\"sourceTagId\", jsonData.data.id);"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "name": "Content-Type",
-                "type": "text",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n\t\"data\": {\n\t\t\"type\": \"tag\",\n\t\t\"attributes\": {\n\t\t\t\"name\": \"source\",\n\t\t\t\"type\": \"SOURCE\"\n\t\t}\n\t}\n}\n"
-            },
-            "url": {
-              "raw": "http://localhost:8080/data/repository/{{repositoryId}}/tags",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "data",
-                "repository",
-                "{{repositoryId}}",
-                "tags"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Create tag \"baseline\"",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "id": "9c7209cd-b714-4be5-bda6-b995eee76e07",
-                "exec": [
-                  "var jsonData = JSON.parse(responseBody);",
-                  "postman.setEnvironmentVariable(\"baselineTagId\", jsonData.data.id);"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "name": "Content-Type",
-                "type": "text",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n\t\"data\": {\n\t\t\"type\": \"tag\",\n\t\t\"attributes\": {\n\t\t\t\"name\": \"baseline\",\n\t\t\t\"type\": \"BASELINE\"\n\t\t}\n\t}\n}\n"
-            },
-            "url": {
-              "raw": "http://localhost:8080/data/repository/{{repositoryId}}/tags",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "data",
-                "repository",
-                "{{repositoryId}}",
-                "tags"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Make \"baseline\" to repository initialBaseline",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "name": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"data\": {\n        \"type\": \"repository\",\n        \"id\": \"{{repositoryId}}\",\n        \"relationships\": {\n            \"initialBaseline\": {\n                \"data\": [\n                    {\n                        \"type\": \"tag\",\n                        \"id\": \"{{baselineTagId}}\"\n                    }\n                ]\n            }\n        }\n    }\n}"
-            },
-            "url": {
-              "raw": "http://localhost:8080/data/repository/{{repositoryId}}/",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "data",
-                "repository",
-                "{{repositoryId}}",
-                ""
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Create tag \"nextIntermediate\"",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "id": "9c7209cd-b714-4be5-bda6-b995eee76e07",
-                "exec": [
-                  "var jsonData = JSON.parse(responseBody);",
-                  "postman.setEnvironmentVariable(\"nextIntermediateTagId\", jsonData.data.id);"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "name": "Content-Type",
-                "type": "text",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n\t\"data\": {\n\t\t\"type\": \"tag\",\n\t\t\"attributes\": {\n\t\t\t\"name\": \"nextIntermediate\",\n\t\t\t\"type\": \"INTERMEDIATE\"\n\t\t}\n\t}\n}\n"
-            },
-            "url": {
-              "raw": "http://localhost:8080/data/repository/{{repositoryId}}/tags",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "data",
-                "repository",
-                "{{repositoryId}}",
-                "tags"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Create tag \"nextBaseline\"",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "id": "9c7209cd-b714-4be5-bda6-b995eee76e07",
-                "exec": [
-                  "var jsonData = JSON.parse(responseBody);",
-                  "postman.setEnvironmentVariable(\"nextBaselineTagId\", jsonData.data.id);"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "name": "Content-Type",
-                "type": "text",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n\t\"data\": {\n\t\t\"type\": \"tag\",\n\t\t\"attributes\": {\n\t\t\t\"name\": \"nextBaseline\",\n\t\t\t\"type\": \"INTERMEDIATE\"\n\t\t}\n\t}\n}\n"
-            },
-            "url": {
-              "raw": "http://localhost:8080/data/repository/{{repositoryId}}/tags",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "data",
-                "repository",
-                "{{repositoryId}}",
-                "tags"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Channel",
-      "item": [
-        {
-          "name": "Create channel \"develop\"",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "id": "9c7209cd-b714-4be5-bda6-b995eee76e07",
-                "exec": [
-                  "var jsonData = JSON.parse(responseBody);",
-                  "postman.setEnvironmentVariable(\"channelId\", jsonData.data.id);"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "name": "Content-Type",
-                "type": "text",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n\t\"data\": {\n\t\t\"type\": \"channel\",\n\t\t\"attributes\": {\n\t\t\t\"name\": \"develop\"\n\t\t},\n\t    \"relationships\": {\n\t        \"currentBaseline\": {\n\t            \"data\": {\n\t                \"type\": \"tag\",\n\t                \"id\": \"{{baselineTagId}}\"\n\t            }\n\t        },\n\t        \"currentTag\": {\n\t            \"data\": {\n\t                \"type\": \"tag\",\n\t                \"id\": \"{{baselineTagId}}\"\n\t            }\n\t        }\n\t\t}\n\t}\n}\n"
-            },
-            "url": {
-              "raw": "http://localhost:8080/data/repository/{{repositoryId}}/channels",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "data",
-                "repository",
-                "{{repositoryId}}",
-                "channels"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Patch",
-      "item": [
-        {
-          "name": "Create patch \"source\"",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "id": "7dc27f84-9c5b-4890-9290-952258cd30f4",
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(202);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "tagId",
-                  "value": "{{sourceTagId}}",
-                  "type": "text"
-                },
-                {
-                  "key": "tagType",
-                  "value": "SOURCE",
-                  "type": "text"
-                }
-              ]
-            },
-            "url": {
-              "raw": "http://localhost:8080/action/channels/{{channelId}}/addTag",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "action",
-                "channels",
-                "{{channelId}}",
-                "addTag"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    }
-  ]
+	"info": {
+		"_postman_id": "08502a7c-9342-4a95-855e-7e378ad1f6c4",
+		"name": "Deltaforge",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Repository",
+			"item": [
+				{
+					"name": "Create Repository \"myRepo\"",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "544e5ebe-201d-478d-9285-8da05a3ecb8f",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "946e2965-f252-485a-b3dc-3ec4919c24fe",
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable(\"repositoryId\", jsonData.data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"data\": {\n\t\t\"type\": \"repository\",\n\t\t\"attributes\": {\n\t\t\t\"name\": \"myRepo\"\n\t\t}\n\t}\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/data/repository",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"data",
+								"repository"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List repositories",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "544e5ebe-201d-478d-9285-8da05a3ecb8f",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "946e2965-f252-485a-b3dc-3ec4919c24fe",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8080/data/repository?include=tags,channels,patches",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"data",
+								"repository"
+							],
+							"query": [
+								{
+									"key": "include",
+									"value": "tags,channels,patches"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Repository \"myRepo\"",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5aa587ff-9778-41cc-8359-3168fa8ab2ba",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8080/data/repository/{{repositoryId}}?include=tags,channels",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"data",
+								"repository",
+								"{{repositoryId}}"
+							],
+							"query": [
+								{
+									"key": "include",
+									"value": "tags,channels"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tag",
+			"item": [
+				{
+					"name": "Create tag \"source\"",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9c7209cd-b714-4be5-bda6-b995eee76e07",
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable(\"sourceTagId\", jsonData.data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"data\": {\n\t\t\"type\": \"tag\",\n\t\t\"attributes\": {\n\t\t\t\"name\": \"source\",\n\t\t\t\"type\": \"SOURCE\"\n\t\t}\n\t}\n}\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/data/repository/{{repositoryId}}/tags",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"data",
+								"repository",
+								"{{repositoryId}}",
+								"tags"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create tag \"baseline\"",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9c7209cd-b714-4be5-bda6-b995eee76e07",
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable(\"baselineTagId\", jsonData.data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"data\": {\n\t\t\"type\": \"tag\",\n\t\t\"attributes\": {\n\t\t\t\"name\": \"baseline\",\n\t\t\t\"type\": \"BASELINE\"\n\t\t}\n\t}\n}\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/data/repository/{{repositoryId}}/tags",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"data",
+								"repository",
+								"{{repositoryId}}",
+								"tags"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Make \"baseline\" to repository initialBaseline",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4a5d708d-e7a1-47c9-8994-0a02eee43ee2",
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data\": {\n        \"type\": \"repository\",\n        \"id\": \"{{repositoryId}}\",\n        \"relationships\": {\n            \"initialBaseline\": {\n                \"data\": [\n                    {\n                        \"type\": \"tag\",\n                        \"id\": \"{{baselineTagId}}\"\n                    }\n                ]\n            }\n        }\n    }\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/data/repository/{{repositoryId}}/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"data",
+								"repository",
+								"{{repositoryId}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create tag \"nextIntermediate\"",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9c7209cd-b714-4be5-bda6-b995eee76e07",
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable(\"nextIntermediateTagId\", jsonData.data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"data\": {\n\t\t\"type\": \"tag\",\n\t\t\"attributes\": {\n\t\t\t\"name\": \"nextIntermediate\",\n\t\t\t\"type\": \"INTERMEDIATE\"\n\t\t}\n\t}\n}\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/data/repository/{{repositoryId}}/tags",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"data",
+								"repository",
+								"{{repositoryId}}",
+								"tags"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create tag \"nextBaseline\"",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9c7209cd-b714-4be5-bda6-b995eee76e07",
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable(\"nextBaselineTagId\", jsonData.data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"data\": {\n\t\t\"type\": \"tag\",\n\t\t\"attributes\": {\n\t\t\t\"name\": \"nextBaseline\",\n\t\t\t\"type\": \"INTERMEDIATE\"\n\t\t}\n\t}\n}\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/data/repository/{{repositoryId}}/tags",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"data",
+								"repository",
+								"{{repositoryId}}",
+								"tags"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Channel",
+			"item": [
+				{
+					"name": "Create channel \"develop\"",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9c7209cd-b714-4be5-bda6-b995eee76e07",
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable(\"channelId\", jsonData.data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"data\": {\n\t\t\"type\": \"channel\",\n\t\t\"attributes\": {\n\t\t\t\"name\": \"develop\"\n\t\t},\n\t    \"relationships\": {\n\t        \"currentBaseline\": {\n\t            \"data\": {\n\t                \"type\": \"tag\",\n\t                \"id\": \"{{baselineTagId}}\"\n\t            }\n\t        },\n\t        \"currentTag\": {\n\t            \"data\": {\n\t                \"type\": \"tag\",\n\t                \"id\": \"{{baselineTagId}}\"\n\t            }\n\t        }\n\t\t}\n\t}\n}\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/data/repository/{{repositoryId}}/channels",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"data",
+								"repository",
+								"{{repositoryId}}",
+								"channels"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Patch",
+			"item": [
+				{
+					"name": "Create patch \"source\"",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "7dc27f84-9c5b-4890-9290-952258cd30f4",
+								"exec": [
+									"pm.test(\"Status code is 202\", function () {",
+									"    pm.response.to.have.status(202);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "tagId",
+									"value": "{{sourceTagId}}",
+									"type": "text"
+								},
+								{
+									"key": "tagType",
+									"value": "SOURCE",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/action/channels/{{channelId}}/addTag",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"action",
+								"channels",
+								"{{channelId}}",
+								"addTag"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create patch \"nextIntermediate\"",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "7dc27f84-9c5b-4890-9290-952258cd30f4",
+								"exec": [
+									"pm.test(\"Status code is 202\", function () {",
+									"    pm.response.to.have.status(202);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "x-api-key",
+									"value": "apple",
+									"type": "text"
+								},
+								{
+									"key": "tagId",
+									"value": "{{nextIntermediateTagId}}",
+									"type": "text"
+								},
+								{
+									"key": "tagType",
+									"value": "INTERMEDIATE",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/action/channels/{{channelId}}/addTag",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"action",
+								"channels",
+								"{{channelId}}",
+								"addTag"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "338c3ee7-3d43-4795-93de-dd670e2d554d",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "77df9256-bad2-4a9b-9495-2089342b1481",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "9d24da13-253b-4bcb-b1dd-02298b9538b7",
+			"key": "API_KEY",
+			"value": "apple",
+			"type": "string"
+		}
+	]
 }

@@ -65,15 +65,19 @@ In our Forged Alliance use case the different source versions would represent di
   * for the client to always know the latest tag of his chosen channel
 
 
-
-
-
 ## Modules
 This repository is composed of 4 gradle modules:
 * **deltaforge-api-dto** contains all data transfer objects required to communicate with the server API.
 * **deltaforge-client-starter** is a Spring Boot starter package / library which abstracts the whole Deltaforge client functionality into a single class.
 * **deltaforge-patching** contains the patching logic of bsdiff4 applied on directories and archived files.
 * **deltaforge-server** is a Spring Boot REST API offering information for clients and management endpoints to add / update existing repositories.
+
+
+## Run & test the server
+
+To run the server make sure to enable the test profile (either in your IDE or by adding the runtime parameter `-Dspring.profiles.active=test`). This will boot up the server on port `8080` using an in-memory database (which means all changes will be lost after shutdown).
+
+To test the server api you can use the postman collection in `deltaforge-server/src/test/postman/collection.json`.
 
 
 ## Technologies used

@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:deltaforge
+    username: sa
+    password:
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: create
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+deltaforge:
+  security:
+    auth-token: apple
