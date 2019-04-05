@@ -1,8 +1,6 @@
-package net.brutus5000.deltaforge.server;
+package net.brutus5000.deltaforge.server.api;
 
 import net.brutus5000.deltaforge.api.dto.TagTypeDto;
-import net.brutus5000.deltaforge.server.api.ApiDtoMapper;
-import net.brutus5000.deltaforge.server.api.RepoService;
 import net.brutus5000.deltaforge.server.config.DeltaforgeServerProperties;
 import net.brutus5000.deltaforge.server.error.ApiException;
 import net.brutus5000.deltaforge.server.error.ErrorCode;
