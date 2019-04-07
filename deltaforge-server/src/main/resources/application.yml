@@ -1,4 +1,8 @@
 spring:
+  datasource:
+    url: jdbc:h2:file:/deltaforge/database.h2
+    username: sa
+    password:
   jackson:
     default-property-inclusion: non_null
 logging:
@@ -11,4 +15,4 @@ deltaforge:
   security:
     auth-token-header-name: x-api-key
     auth-token: ${API_KEY}
-  root-repository-path: ${ROOT_REPOSITORY_PATH}
+  root-repository-path: /deltaforge

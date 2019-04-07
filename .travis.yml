@@ -3,8 +3,24 @@ language: java
 jdk:
   - openjdk11
 
+services:
+  - docker
+
+before_install:
+  - DOCKER_IMAGE_VERSION=$([ -n "${TRAVIS_TAG}" ] && echo "${TRAVIS_TAG}" || echo "${TRAVIS_BRANCH##*/}")
+  - IMAGE_TAG=deltaforge
+  - REPO=brutus5000/deltaforge
+
 install:
   - chmod +x gradlew
 
 script:
   - ./gradlew build --info
+  - if [ -n "${TRAVIS_TAG}" -o "${TRAVIS_BRANCH}" == "master" ]; then
+    pushd deltaforge-server &&
+    docker build -t ${IMAGE_TAG} . &&
+    echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin &&
+    docker tag ${IMAGE_TAG} ${REPO}:${DOCKER_IMAGE_VERSION} &&
+    docker push ${REPO} &&
+    popd;
+    fi
