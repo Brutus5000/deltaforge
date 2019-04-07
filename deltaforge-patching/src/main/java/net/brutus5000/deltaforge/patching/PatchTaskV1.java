@@ -53,40 +53,39 @@ public class PatchTaskV1 {
     }
 
     PatchFileItem compareFile(@NonNull Path relativeFilePath) throws IOException {
-        final Path sourceFile = rootSourceFolder.resolve(relativeFilePath);
-        final Path targetFile = rootTargetFolder.resolve(relativeFilePath);
-        final Path initialBaselineFile = rootInitialBaselineFolder.resolve(relativeFilePath);
-        final Path patchFile = rootPatchFolder.resolve(relativeFilePath);
+        log.debug("compareFile for `{}`", relativeFilePath);
+
+        final PathBuilder paths = new PathBuilder(relativeFilePath);
 
         PatchFileItem item = new PatchFileItem()
                 .setName(relativeFilePath.getFileName().toString());
 
         // if target folder already exists it's either new or delta
-        if (ioService.isFile(targetFile)) {
-            item.setTargetCrc(ioService.crc32(targetFile));
+        if (ioService.isFile(paths.target)) {
+            item.setTargetCrc(ioService.crc32(paths.target));
 
-            if (ioService.isFile(sourceFile)) {
-                item.setBaseCrc(ioService.crc32(sourceFile));
+            if (ioService.isFile(paths.source)) {
+                item.setBaseCrc(ioService.crc32(paths.source));
 
                 if (Objects.equals(item.getBaseCrc(), item.getTargetCrc())) {
                     item.setAction(PatchAction.UNCHANGED);
                 } else {
                     item.setAction(PatchAction.BSDIFF);
-                    bsdiff4Service.createPatch(sourceFile, targetFile, patchFile);
+                    bsdiff4Service.createPatch(paths.source, paths.target, paths.patch);
                 }
-            } else if (ioService.isFile(initialBaselineFile)) {
-                item.setBaseCrc(ioService.crc32(initialBaselineFile));
+            } else if (ioService.isFile(paths.initialBaseline)) {
+                item.setBaseCrc(ioService.crc32(paths.initialBaseline));
 
                 if (Objects.equals(item.getBaseCrc(), item.getTargetCrc())) {
                     item.setAction(PatchAction.ADD);
-                    ioService.copy(targetFile, patchFile);
+                    ioService.copy(paths.target, paths.patch);
                 } else {
                     item.setAction(PatchAction.BSDIFF_FROM_INITIAL_BASELINE);
-                    bsdiff4Service.createPatch(initialBaselineFile, targetFile, patchFile);
+                    bsdiff4Service.createPatch(paths.initialBaseline, paths.target, paths.patch);
                 }
             } else {
                 item.setAction(PatchAction.ADD);
-                ioService.copy(targetFile, patchFile);
+                ioService.copy(paths.target, paths.patch);
             }
         } else {
             item.setAction(PatchAction.REMOVE);
@@ -98,27 +97,24 @@ public class PatchTaskV1 {
     PatchDirectoryItem compareDirectory(@NonNull Path relativeFolderPath) throws IOException {
         log.debug("compareDirectory for `{}`", relativeFolderPath);
 
-        final Path sourceFolder = rootSourceFolder.resolve(relativeFolderPath);
-        final Path targetFolder = rootTargetFolder.resolve(relativeFolderPath);
-        final Path initialBaselineFolder = rootInitialBaselineFolder.resolve(relativeFolderPath);
-        final Path patchFolder = rootPatchFolder.resolve(relativeFolderPath);
-
+        final PathBuilder paths = new PathBuilder(relativeFolderPath);
+        
         PatchAction patchAction;
         Set<Path> subDirectories = new HashSet<>();
         Set<Path> files = new HashSet<>();
 
         // if target folder already exists it's either new or delta
-        if (ioService.isDirectory(targetFolder)) {
-            scanDirectory(targetFolder, subDirectories, files);
+        if (ioService.isDirectory(paths.target)) {
+            scanDirectory(paths.target, subDirectories, files);
 
-            if (ioService.isDirectory(sourceFolder)) {
+            if (ioService.isDirectory(paths.source)) {
                 patchAction = PatchAction.DELTA;
-                ioService.createDirectories(patchFolder);
-                scanDirectory(sourceFolder, subDirectories, files);
-            } else if (ioService.isDirectory(initialBaselineFolder)) {
+                ioService.createDirectories(paths.patch);
+                scanDirectory(paths.source, subDirectories, files);
+            } else if (ioService.isDirectory(paths.initialBaseline)) {
                 patchAction = PatchAction.DELTA;
-                ioService.createDirectories(patchFolder);
-                scanDirectory(initialBaselineFolder, subDirectories, files);
+                ioService.createDirectories(paths.patch);
+                scanDirectory(paths.initialBaseline, subDirectories, files);
             } else {
                 patchAction = PatchAction.ADD;
             }
@@ -155,20 +151,21 @@ public class PatchTaskV1 {
     }
 
     private String determineArchiveType(@NonNull Path relativeFilePath) throws IOException {
-        final Path sourceFile = rootSourceFolder.resolve(relativeFilePath);
-        final Path targetFile = rootTargetFolder.resolve(relativeFilePath);
-        final Path initialBaselineFile = rootInitialBaselineFolder.resolve(relativeFilePath);
-        final Path patchFile = rootPatchFolder.resolve(relativeFilePath);
+        final PathBuilder paths = new PathBuilder(relativeFilePath);
 
-        if (ioService.isFile(targetFile)) {
-            return ioService.determineArchiveType(targetFile);
-        } else if (ioService.isFile(sourceFile)) {
-            return ioService.determineArchiveType(sourceFile);
-        } else if (ioService.isFile(initialBaselineFile)) {
-            return ioService.determineArchiveType(initialBaselineFile);
-        } else {
-            return null;
+        String archiveType = null;
+
+        if (ioService.isFile(paths.target)) {
+            archiveType = ioService.determineArchiveType(paths.target);
+        } else if (ioService.isFile(paths.source)) {
+            archiveType = ioService.determineArchiveType(paths.source);
+        } else if (ioService.isFile(paths.initialBaseline)) {
+            archiveType = ioService.determineArchiveType(paths.initialBaseline);
         }
+
+        log.debug("ArchiveType of `{}` is: {}", relativeFilePath, archiveType);
+
+        return archiveType;
     }
 
     private void scanDirectory(@NonNull Path directory, @NonNull Set<Path> subDirectories, @NonNull Set<Path> files) throws IOException {
@@ -188,35 +185,31 @@ public class PatchTaskV1 {
     }
 
     PatchCompressedItem compareCompressedFile(@NonNull Path relativeFilePath, String archiveType) throws IOException {
-        final Path sourceZipFile = rootSourceFolder.resolve(relativeFilePath);
-        final Path targetZipFile = rootTargetFolder.resolve(relativeFilePath);
-        final Path initialBaselineZipFile = rootInitialBaselineFolder.resolve(relativeFilePath);
-        final Path patchZipFile = rootPatchFolder.resolve(relativeFilePath);
-
-
+        final PathBuilder paths = new PathBuilder(relativeFilePath);
+        
         PatchCompressedItem item = new PatchCompressedItem()
                 .setName(relativeFilePath.getFileName().toString())
                 .setAlgorithm(archiveType);
 
         // if target folder already exists it's either new or delta
-        if (ioService.isFile(targetZipFile)) {
+        if (ioService.isFile(paths.target)) {
 
-            if (ioService.isFile(sourceZipFile)) {
-                if (Objects.equals(ioService.crc32(sourceZipFile), ioService.crc32(targetZipFile))) {
+            if (ioService.isFile(paths.source)) {
+                if (Objects.equals(ioService.crc32(paths.source), ioService.crc32(paths.target))) {
                     item.setAction(PatchAction.UNCHANGED);
                 } else {
-                    internalCompareArchive(sourceZipFile, targetZipFile, patchZipFile, item, archiveType, true);
+                    internalCompareArchive(paths.source, paths.target, paths.patch, item, archiveType, true);
                 }
-            } else if (ioService.isFile(initialBaselineZipFile)) {
-                if (Objects.equals(ioService.crc32(initialBaselineZipFile), ioService.crc32(targetZipFile))) {
+            } else if (ioService.isFile(paths.initialBaseline)) {
+                if (Objects.equals(ioService.crc32(paths.initialBaseline), ioService.crc32(paths.target))) {
                     item.setAction(PatchAction.ADD);
-                    ioService.copy(targetZipFile, patchZipFile);
+                    ioService.copy(paths.target, paths.patch);
                 } else {
-                    internalCompareArchive(initialBaselineZipFile, targetZipFile, patchZipFile, item, archiveType, false);
+                    internalCompareArchive(paths.initialBaseline, paths.target, paths.patch, item, archiveType, false);
                 }
             } else {
                 item.setAction(PatchAction.ADD);
-                ioService.copy(targetZipFile, patchZipFile);
+                ioService.copy(paths.target, paths.patch);
             }
         } else {
             item.setAction(PatchAction.REMOVE);
@@ -278,32 +271,29 @@ public class PatchTaskV1 {
     void applyFile(@NonNull PatchFileItem fileItem, @NonNull Path relativeFolderPath) throws IOException {
         log.debug("apply PatchFileItem {} in relative path {}", fileItem);
 
-        final Path sourceFile = rootSourceFolder.resolve(relativeFolderPath).resolve(fileItem.getName());
-        final Path targetFile = rootTargetFolder.resolve(relativeFolderPath).resolve(fileItem.getName());
-        final Path initialBaselineFile = rootInitialBaselineFolder.resolve(relativeFolderPath).resolve(fileItem.getName());
-        final Path patchFile = rootPatchFolder.resolve(relativeFolderPath).resolve(fileItem.getName());
-
+        final PathBuilder paths = new PathBuilder(relativeFolderPath, fileItem);
+        
         switch (fileItem.getAction()) {
             case UNCHANGED:
-                verifyCrc(sourceFile, fileItem.getBaseCrc());
-                ioService.copy(sourceFile, targetFile);
+                verifyCrc(paths.source, fileItem.getBaseCrc());
+                ioService.copy(paths.source, paths.target);
                 break;
             case ADD:
-                ioService.copy(patchFile, targetFile);
-                verifyCrc(targetFile, fileItem.getTargetCrc());
+                ioService.copy(paths.patch, paths.target);
+                verifyCrc(paths.target, fileItem.getTargetCrc());
                 break;
             case REMOVE:
                 // do nothing - the file will not be copied to the target path
                 break;
             case BSDIFF:
-                verifyCrc(sourceFile, fileItem.getBaseCrc());
-                bsdiff4Service.applyPatch(sourceFile, targetFile, patchFile);
-                verifyCrc(targetFile, fileItem.getTargetCrc());
+                verifyCrc(paths.source, fileItem.getBaseCrc());
+                bsdiff4Service.applyPatch(paths.source, paths.target, paths.patch);
+                verifyCrc(paths.target, fileItem.getTargetCrc());
                 break;
             case BSDIFF_FROM_INITIAL_BASELINE:
-                verifyCrc(initialBaselineFile, fileItem.getBaseCrc());
-                bsdiff4Service.applyPatch(initialBaselineFile, targetFile, patchFile);
-                verifyCrc(targetFile, fileItem.getTargetCrc());
+                verifyCrc(paths.initialBaseline, fileItem.getBaseCrc());
+                bsdiff4Service.applyPatch(paths.initialBaseline, paths.target, paths.patch);
+                verifyCrc(paths.target, fileItem.getTargetCrc());
                 break;
             default:
                 throw new IllegalStateException("Action type is undefined for applying files: " + fileItem.getAction());
@@ -313,12 +303,11 @@ public class PatchTaskV1 {
     void applyDirectory(@NonNull PatchDirectoryItem directoryItem, @NonNull Path relativeFolderPath) throws IOException {
         log.debug("apply PatchDirectoryItem {} in relative path {}", directoryItem);
 
-        final Path targetFolder = rootTargetFolder.resolve(relativeFolderPath).resolve(directoryItem.getName());
-        final Path patchFolder = rootPatchFolder.resolve(relativeFolderPath).resolve(directoryItem.getName());
+        final PathBuilder paths = new PathBuilder(relativeFolderPath, directoryItem);
 
         switch (directoryItem.getAction()) {
             case ADD:
-                ioService.copyDirectory(patchFolder, targetFolder);
+                ioService.copyDirectory(paths.patch, paths.target);
                 break;
             case REMOVE:
                 // do nothing - the folder will not be copied to the target path
@@ -334,17 +323,14 @@ public class PatchTaskV1 {
     void applyZipFile(@NonNull PatchCompressedItem compressedItem, @NonNull Path relativeFolderPath) throws IOException {
         log.debug("apply PatchCompressedItem {} in relative path {}", compressedItem);
 
-        final Path sourceZipFile = rootSourceFolder.resolve(relativeFolderPath).resolve(compressedItem.getName());
-        final Path targetZipFile = rootTargetFolder.resolve(relativeFolderPath).resolve(compressedItem.getName());
-        final Path initialBaselineZipFile = rootInitialBaselineFolder.resolve(relativeFolderPath).resolve(compressedItem.getName());
-        final Path patchZipFile = rootPatchFolder.resolve(relativeFolderPath).resolve(compressedItem.getName());
+        final PathBuilder paths = new PathBuilder(relativeFolderPath, compressedItem);
 
         switch (compressedItem.getAction()) {
             case UNCHANGED:
-                ioService.copy(sourceZipFile, targetZipFile);
+                ioService.copy(paths.source, paths.target);
                 break;
             case ADD:
-                ioService.copy(patchZipFile, targetZipFile);
+                ioService.copy(paths.patch, paths.target);
                 break;
             case REMOVE:
                 // do nothing - the file will not be copied to the target path
@@ -356,18 +342,18 @@ public class PatchTaskV1 {
                 Path initialBaselineFolder = ioService.createDirectories(tempRootDirectory.resolve("initialBaseline"));
                 Path patchFolder = ioService.createDirectories(tempRootDirectory.resolve("patch"));
 
-                ioService.unzip(sourceZipFile, sourceFolder, compressedItem.getAlgorithm());
-                ioService.unzip(patchZipFile, patchFolder, compressedItem.getAlgorithm());
+                ioService.unzip(paths.source, sourceFolder, compressedItem.getAlgorithm());
+                ioService.unzip(paths.patch, patchFolder, compressedItem.getAlgorithm());
 
                 if (compressedItem.requiresInitialBaseline()) {
-                    ioService.unzip(initialBaselineZipFile, initialBaselineFolder, compressedItem.getAlgorithm());
+                    ioService.unzip(paths.initialBaseline, initialBaselineFolder, compressedItem.getAlgorithm());
                 }
 
                 PatchTaskV1 zipCompareTask = new PatchTaskV1(bsdiff4Service, ioService, sourceFolder, initialBaselineFolder, targetFolder, patchFolder, repositoryName);
 
                 zipCompareTask.applyItems(compressedItem.getItems(), Paths.get("."));
 
-                ioService.zip(targetFolder, targetZipFile, compressedItem.getAlgorithm());
+                ioService.zip(targetFolder, paths.target, compressedItem.getAlgorithm());
                 ioService.deleteDirectory(tempRootDirectory);
 
                 break;
@@ -375,5 +361,23 @@ public class PatchTaskV1 {
                 throw new IllegalStateException("Action type is undefined for applying zip files: " + compressedItem.getAction());
         }
 
+    }
+
+    private class PathBuilder {
+        public final Path source;
+        public final Path target;
+        public final Path initialBaseline;
+        public final Path patch;
+
+        public PathBuilder(Path relativePath) {
+            this.source = rootSourceFolder.resolve(relativePath);
+            this.target = rootTargetFolder.resolve(relativePath);
+            this.initialBaseline = rootInitialBaselineFolder.resolve(relativePath);
+            this.patch = rootPatchFolder.resolve(relativePath);
+        }
+
+        public PathBuilder(Path relativePath, PatchItem patchItem) {
+            this(relativePath.resolve(patchItem.getName()));
+        }
     }
 }
