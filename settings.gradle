@@ -2,4 +2,5 @@ include 'deltaforge-patching'
 include 'deltaforge-server'
 include 'deltaforge-client-starter'
 include 'deltaforge-api-dto'
+include 'deltaforge-zip-merger'
 
